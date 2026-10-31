@@ -24,7 +24,7 @@ from app.modules.billing.schemas import (
     BillingRunTriggerRequest,
 )
 
-router = APIRouter(prefix="/billing", tags=["Billing Engine"])
+router = APIRouter(prefix="/billing", tags=["Billing"])
 
 
 @router.post(
