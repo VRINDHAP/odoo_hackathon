@@ -52,7 +52,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
 
 ## Phase 2: Catalog (Products, Variants, Plans, Taxes) [PDF 17]
 
-- [ ] **BE-2.1 [Nandana]**: Implement Products and Variants models and CRUD endpoints [PDF 5.3, 8].
+- [x] **BE-2.1 [Nandana]**: Implement Products and Variants models and CRUD endpoints [PDF 5.3, 8].
   - **Input**: `GET/POST /products`, `GET/PATCH/DELETE /products/{id}`, `POST /products/{id}/variants`.
   - **Expected Output**: Working catalog router; variant table with `UNIQUE(product_id, attribute, value)`.
   - **Acceptance Test**: Effective price calculates `sales_price + extra_price`; cost margin exposed strictly to Admin.
