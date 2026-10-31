@@ -420,3 +420,4 @@ export const InvoiceDetailPage: React.FC = () => {
     </div>
   );
 };
+

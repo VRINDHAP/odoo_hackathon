@@ -457,3 +457,4 @@ export const DiscountsPage: React.FC = () => {
     </div>
   );
 };
+
