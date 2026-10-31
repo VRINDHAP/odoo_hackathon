@@ -7,6 +7,7 @@ import { Button } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type { Customer, Invoice, PaginatedResponse, SystemSettings } from '../../types/domain';
 import { formatDate, isInvoiceOverdue } from '../../utils/dates';
@@ -72,6 +73,8 @@ export const InvoicesPage: React.FC = () => {
   useEffect(() => {
     void loadInvoices();
   }, [loadInvoices]);
+
+  useRealtimeSync(loadInvoices, { pollIntervalMs: 30000 });
 
   // SPEC.md §1 & §5.9: Paid, Outstanding, and Overdue amounts always visible
   const ledgerRollup = useMemo(() => {

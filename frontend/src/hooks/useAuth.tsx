@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       body: { email, password },
       skipAuthRefresh: true,
     });
-    tokenStore.setSession(res.access_token, res.user);
+    tokenStore.setSession(res.access_token, res.user, res.refresh_token);
     return res.user;
   }, []);
 
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       body: input,
       skipAuthRefresh: true,
     });
-    tokenStore.setSession(res.access_token, res.user);
+    tokenStore.setSession(res.access_token, res.user, res.refresh_token);
     return res.user;
   }, []);
 

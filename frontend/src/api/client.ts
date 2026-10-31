@@ -5,7 +5,9 @@
 
 import type { ApiErrorPayload, AuthResponse, FieldValidationError } from '../types/domain';
 import { generateIdempotencyKey } from '../utils/idempotency';
+import { normalizeLiveResponse, rewriteLiveRequest } from './liveAdapter';
 import { handleMockRequest } from './mockEngine';
+import { emitDataMutation, markSyncedNow } from './realtimeBus';
 import { tokenStore } from './tokenStore';
 
 const API_BASE = '/api/v1';
@@ -56,15 +58,17 @@ async function tryRefreshAccessToken(): Promise<boolean> {
 
   activeRefreshPromise = (async () => {
     try {
+      const refreshToken = tokenStore.getRefreshToken();
       const res = await fetch(`${API_BASE}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
+        body: refreshToken ? JSON.stringify({ refresh_token: refreshToken }) : undefined,
       });
 
       if (res.ok) {
         const data = (await res.json()) as AuthResponse;
-        tokenStore.setSession(data.access_token, data.user);
+        tokenStore.setSession(data.access_token, data.user, data.refresh_token);
         dataSourceMode = 'live';
         return true;
       }
@@ -73,7 +77,7 @@ async function tryRefreshAccessToken(): Promise<boolean> {
         const mockRes = await handleMockRequest('POST', '/auth/refresh');
         if (mockRes.status === 200 && mockRes.data) {
           const data = mockRes.data as AuthResponse;
-          tokenStore.setSession(data.access_token, data.user);
+          tokenStore.setSession(data.access_token, data.user, data.refresh_token);
           dataSourceMode = 'mock-fallback';
           return true;
         }
@@ -82,7 +86,7 @@ async function tryRefreshAccessToken(): Promise<boolean> {
       const mockRes = await handleMockRequest('POST', '/auth/refresh');
       if (mockRes.status === 200 && mockRes.data) {
         const data = mockRes.data as AuthResponse;
-        tokenStore.setSession(data.access_token, data.user);
+        tokenStore.setSession(data.access_token, data.user, data.refresh_token);
         dataSourceMode = 'mock-fallback';
         return true;
       }
@@ -126,13 +130,23 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   // Attempt live /api/v1 backend first; gracefully fall back to stateful OpenAPI mock engine if unmounted/offline
   let fallbackToMock = false;
+  const rewritten = rewriteLiveRequest(method, normalizedPath, options.body);
+  const isMutation =
+    method !== 'GET' &&
+    cleanEndpointPath !== '/auth/refresh' &&
+    cleanEndpointPath !== '/auth/login' &&
+    cleanEndpointPath !== '/auth/logout';
 
   try {
-    const response = await fetch(`${API_BASE}${normalizedPath}`, {
+    const liveHeaders = {
+      ...headers,
+      ...(rewritten.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    };
+    const response = await fetch(`${API_BASE}${rewritten.livePath}`, {
       method,
-      headers,
+      headers: liveHeaders,
       credentials: 'include',
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: rewritten.body !== undefined ? JSON.stringify(rewritten.body) : undefined,
     });
 
     if (response.status === 404 || response.status === 502 || response.status === 503 || response.status === 504) {
@@ -171,7 +185,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
         });
       }
 
+      markSyncedNow();
+
       if (response.status === 204) {
+        if (isMutation) emitDataMutation(method, cleanEndpointPath, 'live');
         return undefined as T;
       }
 
@@ -179,7 +196,18 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
         return (await response.blob()) as unknown as T;
       }
 
-      return (await response.json()) as T;
+      const rawJson = await response.json();
+      const normalized = normalizeLiveResponse<T>(
+        method,
+        rewritten.originalCleanPath,
+        rewritten.originalQuery,
+        rawJson,
+        response.headers
+      );
+      if (isMutation) {
+        emitDataMutation(method, cleanEndpointPath, 'live');
+      }
+      return normalized;
     }
   } catch (error) {
     if (error instanceof ApiClientError) {
@@ -188,7 +216,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     fallbackToMock = true;
   }
 
-  // Stateful OpenAPI 3.0 Mock Engine Execution
+  // Stateful OpenAPI 3.0 Ledger Engine Execution
   dataSourceMode = 'mock-fallback';
   const mockResult = await handleMockRequest(method, normalizedPath, options.body, headers);
 
@@ -201,6 +229,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
         fields: [],
       }
     );
+  }
+
+  markSyncedNow();
+  if (isMutation) {
+    emitDataMutation(method, cleanEndpointPath, 'mock-fallback');
   }
 
   if (options.responseType === 'blob' && mockResult.blob) {

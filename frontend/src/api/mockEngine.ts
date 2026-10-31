@@ -1115,6 +1115,10 @@ class MockDatabase {
 
 export const mockDb = new MockDatabase();
 
+export function resetMockDatabase(): void {
+  Object.assign(mockDb, new MockDatabase());
+}
+
 function sanitizeUser(u: MockUserRecord): AuthUser {
   return {
     id: u.id,
@@ -2357,16 +2361,48 @@ export async function handleMockRequest(
       methodMap.set(p.method, cur);
     });
 
-    const fullTrend = [
-      { month: 'May 26', invoiced: 98500, collected: 92000 },
-      { month: 'Jun 26', invoiced: 112400, collected: 108000 },
-      { month: 'Jul 26', invoiced: 128000, collected: 121500 },
-      { month: 'Aug 26', invoiced: 141200, collected: 102850 },
-      { month: 'Sep 26', invoiced: 158900, collected: 151200 },
-      { month: 'Oct 26', invoiced: 174600, collected: 148900 },
-    ];
-    const slicedTrend =
-      rangeMonths === 3 ? fullTrend.slice(-3) : rangeMonths === 12 ? fullTrend : fullTrend;
+    const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const allOpenLedgerInvoices = mockDb.invoices.filter((i) => i.status !== 'cancelled');
+    let anchorYm = toDate ? toDate.slice(0, 7) : '';
+    if (!anchorYm) {
+      for (const inv of allOpenLedgerInvoices) {
+        const ym = inv.issue_date.slice(0, 7);
+        if (ym > anchorYm) anchorYm = ym;
+      }
+      for (const pay of mockDb.payments) {
+        const ym = pay.payment_date.slice(0, 7);
+        if (ym > anchorYm) anchorYm = ym;
+      }
+      if (!anchorYm) {
+        anchorYm = todayIsoDate().slice(0, 7);
+      }
+    }
+
+    const [anchorYearStr, anchorMonthStr] = anchorYm.split('-');
+    const anchorYear = Number.parseInt(anchorYearStr, 10) || 2026;
+    const anchorMonthIdx = (Number.parseInt(anchorMonthStr, 10) || 10) - 1;
+    const windowSize = rangeMonths === 3 ? 3 : rangeMonths === 12 ? 12 : 6;
+
+    const slicedTrend: Array<{ month: string; invoiced: number; collected: number }> = [];
+    for (let offset = windowSize - 1; offset >= 0; offset -= 1) {
+      const d = new Date(Date.UTC(anchorYear, anchorMonthIdx - offset, 1));
+      const ym = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+      const label = `${monthShortNames[d.getUTCMonth()]} ${String(d.getUTCFullYear()).slice(2)}`;
+
+      const monthInvoiced = allOpenLedgerInvoices
+        .filter((inv) => inv.issue_date.slice(0, 7) === ym)
+        .reduce((acc, inv) => roundHalfUp(acc + parseMoney(inv.total)), 0);
+
+      const monthCollected = mockDb.payments
+        .filter((pay) => pay.payment_date.slice(0, 7) === ym)
+        .reduce((acc, pay) => roundHalfUp(acc + parseMoney(pay.amount)), 0);
+
+      slicedTrend.push({
+        month: label,
+        invoiced: monthInvoiced,
+        collected: Math.max(0, monthCollected),
+      });
+    }
 
     const summary: DashboardSummary = {
       currency: mockDb.settings.currency,
@@ -2461,13 +2497,46 @@ export async function handleMockRequest(
     const fromPeriod = (query.get('from') ?? '').slice(0, 7);
     const toPeriod = (query.get('to') ?? '').slice(0, 7);
 
-    const allRows: RevenueReportRow[] = [
-      { period: '2026-10', plan_name: 'Growth Monthly', product_name: 'Brightloop Core ERP Suite', invoiced: '125600.00', collected: '82611.60', currency: mockDb.settings.currency },
-      { period: '2026-09', plan_name: 'Growth Monthly', product_name: 'Brightloop Core ERP Suite', invoiced: '62988.40', collected: '62988.40', currency: mockDb.settings.currency },
-      { period: '2026-08', plan_name: 'Growth Monthly', product_name: 'Smart POS Billing Terminal', invoiced: '38350.00', collected: '0.00', currency: mockDb.settings.currency },
-      { period: '2026-06', plan_name: 'Starter Weekly Ops', product_name: 'Automated Treasury & Recon Add-on', invoiced: '28400.00', collected: '28400.00', currency: mockDb.settings.currency },
-      { period: '2026-03', plan_name: 'Enterprise Annual Commit', product_name: 'Brightloop Core ERP Suite', invoiced: '566400.00', collected: '566400.00', currency: mockDb.settings.currency },
-    ];
+    // Dynamically aggregate monthly revenue by plan & primary product from live ledger invoices
+    const groupedMap = new Map<
+      string,
+      { period: string; plan_name: string; product_name: string; invoiced: number; collected: number }
+    >();
+
+    for (const inv of mockDb.invoices) {
+      if (inv.status === 'cancelled') continue;
+      const period = inv.issue_date.slice(0, 7);
+      const linkedSub = inv.subscription_id
+        ? mockDb.subscriptions.find((s) => s.id === inv.subscription_id)
+        : undefined;
+      const planName = linkedSub?.plan_name ?? 'Direct Invoice';
+      const rawLineDesc = inv.lines[0]?.description ?? 'Subscription Charge';
+      const cleanLineDesc = rawLineDesc.split(' (')[0].split(' ×')[0].trim();
+      const productName = linkedSub?.lines[0]?.product_name ?? cleanLineDesc;
+      const groupKey = `${period}|${planName}|${productName}`;
+
+      const current = groupedMap.get(groupKey) ?? {
+        period,
+        plan_name: planName,
+        product_name: productName,
+        invoiced: 0,
+        collected: 0,
+      };
+      current.invoiced = roundHalfUp(current.invoiced + parseMoney(inv.total));
+      current.collected = roundHalfUp(current.collected + parseMoney(inv.amount_paid));
+      groupedMap.set(groupKey, current);
+    }
+
+    const allRows: RevenueReportRow[] = Array.from(groupedMap.values())
+      .sort((a, b) => b.period.localeCompare(a.period) || a.plan_name.localeCompare(b.plan_name))
+      .map((entry) => ({
+        period: entry.period,
+        plan_name: entry.plan_name,
+        product_name: entry.product_name,
+        invoiced: toFixedMoney(entry.invoiced),
+        collected: toFixedMoney(Math.max(0, entry.collected)),
+        currency: mockDb.settings.currency,
+      }));
 
     const rows = allRows.filter((r) => {
       if (planFilter && r.plan_name.toLowerCase() !== planFilter) return false;

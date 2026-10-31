@@ -12,6 +12,7 @@ import { Button } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { BillingRunModal } from '../invoices/BillingRunModal';
 import { useAuth } from '../../hooks/useAuth';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type {
   DashboardSummary,
@@ -78,6 +79,9 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     void loadDashboard();
   }, [loadDashboard]);
+
+  // Real-time cross-tab & mutation synchronization + 30s live telemetry revalidation
+  useRealtimeSync(loadDashboard, { pollIntervalMs: 30000 });
 
   const handleQuickRemind = async (inv: Invoice) => {
     setRemindingId(inv.id);

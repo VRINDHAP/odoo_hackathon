@@ -13,6 +13,7 @@ import {
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type {
   Customer,
@@ -132,6 +133,8 @@ export const SubscriptionsPage: React.FC = () => {
   useEffect(() => {
     void loadSubscriptions();
   }, [loadSubscriptions]);
+
+  useRealtimeSync(loadSubscriptions, { pollIntervalMs: 30000 });
 
   const selectedPlan = plans.find((p) => p.id === newPlanId);
 

@@ -10,6 +10,7 @@ import type { AuthUser } from '../types/domain';
 type AuthListener = () => void;
 
 let memoryAccessToken: string | null = null;
+let memoryRefreshToken: string | null = null;
 let memoryUser: AuthUser | null = null;
 const listeners = new Set<AuthListener>();
 
@@ -24,12 +25,19 @@ export const tokenStore = {
     return memoryAccessToken;
   },
 
+  getRefreshToken(): string | null {
+    return memoryRefreshToken;
+  },
+
   getUser(): AuthUser | null {
     return memoryUser;
   },
 
-  setSession(accessToken: string, user: AuthUser): void {
+  setSession(accessToken: string, user: AuthUser, refreshToken?: string | null): void {
     memoryAccessToken = accessToken;
+    if (refreshToken !== undefined) {
+      memoryRefreshToken = refreshToken;
+    }
     memoryUser = user;
     try {
       sessionStorage.setItem(MOCK_REFRESH_UID_KEY, user.id);
@@ -46,6 +54,7 @@ export const tokenStore = {
 
   clearSession(): void {
     memoryAccessToken = null;
+    memoryRefreshToken = null;
     memoryUser = null;
     try {
       sessionStorage.removeItem(MOCK_REFRESH_UID_KEY);

@@ -85,8 +85,9 @@ describe('Phase 6 — Executive Finance Dashboard, Interactive Charts & CSV Repo
 
     const tooltip = await screen.findByRole('tooltip');
     expect(tooltip).toHaveTextContent('Oct 26');
-    expect(tooltip).toHaveTextContent('INR 1,74,600.00');
-    expect(tooltip).toHaveTextContent('INR 1,48,900.00');
+    // Dynamically summed from live Oct 2026 ledger: inv-02 (62,988.40) + inv-05 (31,270.00) = 94,258.40; pay-02 = 20,000.00
+    expect(tooltip).toHaveTextContent('INR 94,258.40');
+    expect(tooltip).toHaveTextContent('INR 20,000.00');
 
     // Switch horizon filter to Last 3 Months -> slices trend to 3 points
     fireEvent.change(screen.getByLabelText(/Trend horizon/i), { target: { value: '3' } });

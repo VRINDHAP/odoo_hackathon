@@ -48,8 +48,9 @@ export interface AuthUser {
 
 export interface AuthResponse {
   access_token: string;
-  token_type: 'bearer';
+  token_type: 'bearer' | string;
   expires_in: number;
+  refresh_token?: string;
   user: AuthUser;
 }
 
@@ -276,7 +277,7 @@ export interface BillingRunSummary {
   created_count: number;
   skipped_count: number;
   failed_count: number;
-  error_summary: string | null;
+  error_summary: string | Array<{ subscription_id?: string; error?: string }> | null;
 }
 
 export interface AuditLogEntry {

@@ -6,6 +6,7 @@ import { StatusChip } from '../../components/chips/StatusChip';
 import { Button, ConfirmModal, FormInput } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type { PaginatedResponse, PaymentRecord, SystemSettings } from '../../types/domain';
 import { formatDateTime } from '../../utils/dates';
@@ -108,6 +109,8 @@ export const PaymentsPage: React.FC = () => {
   useEffect(() => {
     void loadPayments();
   }, [loadPayments]);
+
+  useRealtimeSync(loadPayments, { pollIntervalMs: 30000 });
 
   const summary = useMemo(() => {
     let grossCollected = 0;

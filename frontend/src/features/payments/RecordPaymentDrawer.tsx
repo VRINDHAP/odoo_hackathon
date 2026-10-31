@@ -189,13 +189,28 @@ export const RecordPaymentDrawer: React.FC<RecordPaymentDrawerProps> = ({
         }
       );
 
+      const nextBalance = Math.max(0, roundHalfUp(remainingBalance - enteredAmount));
+      const updatedInvoice: Invoice = res.invoice ?? {
+        ...selectedInvoice,
+        amount_paid: toFixedMoney(roundHalfUp(parseMoney(selectedInvoice.amount_paid) + enteredAmount)),
+        balance: toFixedMoney(nextBalance),
+        status: nextBalance <= 0.001 ? 'paid' : selectedInvoice.status,
+      };
+      const normalizedPayment: PaymentRecord = {
+        ...res.payment,
+        currency: res.payment.currency ?? selectedInvoice.currency,
+        invoice_number: res.payment.invoice_number ?? selectedInvoice.number,
+        customer_id: res.payment.customer_id ?? selectedInvoice.customer_id,
+        customer_name: res.payment.customer_name ?? selectedInvoice.customer_name,
+      };
+
       showToast(
-        `Recorded ${formatMoney(res.payment.amount, res.payment.currency)} against ${
-          res.invoice.number
+        `Recorded ${formatMoney(normalizedPayment.amount, normalizedPayment.currency)} against ${
+          updatedInvoice.number
         }.`,
         'success'
       );
-      onRecorded?.(res.payment, res.invoice);
+      onRecorded?.(normalizedPayment, updatedInvoice);
       onClose();
     } catch (err) {
       if (err instanceof ApiClientError) {

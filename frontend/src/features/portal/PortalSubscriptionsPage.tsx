@@ -8,6 +8,7 @@ import {
   LifecycleStepper,
   Modal,
 } from '../../components/forms/Primitives';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type { Subscription } from '../../types/domain';
 import { formatDate, formatDateTime, todayIsoDate } from '../../utils/dates';
@@ -58,6 +59,8 @@ export const PortalSubscriptionsPage: React.FC = () => {
   useEffect(() => {
     void loadMySubscriptions();
   }, [loadMySubscriptions]);
+
+  useRealtimeSync(loadMySubscriptions, { pollIntervalMs: 30000 });
 
   const handleConfirmQuotation = async (sub: Subscription) => {
     if (sub.quote_valid_until && todayIsoDate() > sub.quote_valid_until) {

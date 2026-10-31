@@ -7,6 +7,7 @@ import { Button } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type {
   Customer,
@@ -101,6 +102,19 @@ export const ReportsPage: React.FC = () => {
     },
     [debouncedRevSearch, revFrom, revPlanName, revTo]
   );
+
+  const refreshReportsSilently = useCallback(() => {
+    apiRequest<Subscription[]>(`/reports/active-subscriptions?${buildSubQuery(false)}`)
+      .then(setSubRows)
+      .catch(() => undefined);
+    if (isAdmin) {
+      apiRequest<RevenueReportRow[]>(`/reports/revenue?${buildRevQuery(false)}`)
+        .then(setRevRows)
+        .catch(() => undefined);
+    }
+  }, [buildRevQuery, buildSubQuery, isAdmin]);
+
+  useRealtimeSync(refreshReportsSilently, { pollIntervalMs: 30000 });
 
   useEffect(() => {
     setIsLoadingSubs(true);

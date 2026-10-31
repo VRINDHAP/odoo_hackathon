@@ -152,7 +152,15 @@ export const BillingRunModal: React.FC<BillingRunModalProps> = ({
           >
             <span className="eyebrow-cap">Error Summary</span>
             <p className="type-caption" style={{ marginTop: 4 }}>
-              {summary.error_summary ?? 'Zero errors encountered during invoice generation.'}
+              {Array.isArray(summary.error_summary)
+                ? summary.error_summary.length === 0
+                  ? 'Zero errors encountered during invoice generation.'
+                  : summary.error_summary
+                      .map((item) =>
+                        `${item.subscription_id ? `[${item.subscription_id}] ` : ''}${item.error ?? 'Unknown error'}`
+                      )
+                      .join(' · ')
+                : summary.error_summary ?? 'Zero errors encountered during invoice generation.'}
             </p>
           </div>
         </div>

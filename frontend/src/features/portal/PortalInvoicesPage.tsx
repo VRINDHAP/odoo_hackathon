@@ -10,6 +10,7 @@ import {
   ToggleSwitch,
 } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 import { useToast } from '../../hooks/useToast';
 import type { Invoice, PaymentMethod, PaymentRecord } from '../../types/domain';
 import { formatDate, isInvoiceOverdue } from '../../utils/dates';
@@ -67,6 +68,8 @@ export const PortalInvoicesPage: React.FC = () => {
   useEffect(() => {
     void loadMyInvoices();
   }, [loadMyInvoices]);
+
+  useRealtimeSync(loadMyInvoices, { pollIntervalMs: 30000 });
 
   const totals = useMemo(() => {
     let paid = 0;
@@ -159,10 +162,28 @@ export const PortalInvoicesPage: React.FC = () => {
         }
       );
 
+      const nextBal = Math.max(0, roundHalfUp(bal - val));
+      const updatedInvoice: Invoice = res.invoice ?? {
+        ...checkoutInvoice,
+        amount_paid: toFixedMoney(roundHalfUp(parseMoney(checkoutInvoice.amount_paid) + val)),
+        balance: toFixedMoney(nextBal),
+        status: nextBal <= 0.001 ? 'paid' : checkoutInvoice.status,
+      };
+      const normalizedReceipt: PortalPayResponse = {
+        payment: {
+          ...res.payment,
+          currency: res.payment.currency ?? checkoutInvoice.currency,
+          invoice_number: res.payment.invoice_number ?? checkoutInvoice.number,
+          customer_id: res.payment.customer_id ?? checkoutInvoice.customer_id,
+          customer_name: res.payment.customer_name ?? checkoutInvoice.customer_name,
+        },
+        invoice: updatedInvoice,
+      };
+
       setInvoices((prev) =>
-        prev.map((item) => (item.id === res.invoice.id ? res.invoice : item))
+        prev.map((item) => (item.id === updatedInvoice.id ? updatedInvoice : item))
       );
-      setCompletedReceipt(res);
+      setCompletedReceipt(normalizedReceipt);
       showToast(
         `Payment of ${formatMoney(res.payment.amount, res.payment.currency)} succeeded!`,
         'success'
