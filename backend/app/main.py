@@ -66,6 +66,7 @@ def root_endpoint():
     }
 
 
+@app.get("/health", tags=["Health"])
 @app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
 def health_check():
     """
@@ -78,4 +79,5 @@ def health_check():
         "database": "connected" if db_healthy else "unreachable",
         "project": settings.PROJECT_NAME,
         "currency": settings.DEFAULT_CURRENCY,
+        "service_uptime": "online",
     }
