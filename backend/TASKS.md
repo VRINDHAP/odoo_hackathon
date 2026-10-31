@@ -18,13 +18,13 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: Password hashing generates valid hash; verification succeeds on correct password and fails on incorrect password.
   - **Dependencies**: BE-1.1.
 
-- [ ] **BE-1.3 [Nandana]**: Build Auth endpoints (Signup, Login, Token Refresh, Logout) [PDF 8, 9].
+- [x] **BE-1.3 [Nandana]**: Build Auth endpoints (Signup, Login, Token Refresh, Logout) [PDF 8, 9].
   - **Input**: `POST /auth/signup`, `/auth/login`, `/auth/refresh`, `/auth/logout`.
   - **Expected Output**: Working auth router issuing 15-min JWT access token and 7-day rotating hashed refresh token.
   - **Acceptance Test**: Public signup creates `customer` role only; duplicate email returns 409; valid login returns JWT.
   - **Dependencies**: BE-1.2.
 
-- [ ] **BE-1.4 [Nandana]**: Implement Password Strength validator and Account Lockout mechanism [PDF 5.1, 8, 9].
+- [x] **BE-1.4 [Nandana]**: Implement Password Strength validator and Account Lockout mechanism [PDF 5.1, 8, 9].
   - **Input**: Regex `^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$`; failed login counter.
   - **Expected Output**: Request validation rejecting weak passwords; account locked for 15 minutes after 5 consecutive failures.
   - **Acceptance Test**: Password shorter than 9 chars or lacking uppercase/lowercase/symbol fails with HTTP 422; 5th failed login sets `locked_until`.

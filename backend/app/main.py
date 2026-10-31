@@ -30,6 +30,10 @@ app.add_middleware(
 # Register Global Exception Handlers for uniform JSON response envelopes
 setup_exception_handlers(app)
 
+# Register Module Routers
+from app.modules.auth.router import router as auth_router
+app.include_router(auth_router, prefix=settings.API_V1_STR)
+
 
 @app.get("/", tags=["Root"])
 def root_endpoint():
