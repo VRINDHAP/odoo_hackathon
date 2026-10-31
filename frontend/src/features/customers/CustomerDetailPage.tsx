@@ -440,3 +440,4 @@ export const CustomerDetailPage: React.FC = () => {
     </div>
   );
 };
+
