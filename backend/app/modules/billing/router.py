@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import (
     PaginationParams,
+    get_current_user,
     get_db,
     require_admin,
     require_staff_or_admin,

@@ -34,6 +34,7 @@ class SubscriptionLineBase(BaseModel):
         decimal_places=2,
         description="Snapshot unit price per billing cycle",
     )
+    tax_id: Optional[str] = Field(None, description="Foreign key referencing taxes schedule")
     tax_rate: Decimal = Field(
         Decimal("0.0000"),
         ge=Decimal("0.0000"),
@@ -60,6 +61,7 @@ class SubscriptionLineCreate(BaseModel):
         decimal_places=2,
         description="Optional unit price snapshot (defaults to catalog price if omitted)",
     )
+    tax_id: Optional[str] = Field(None, description="Optional tax schedule ID")
     tax_rate: Optional[Decimal] = Field(
         Decimal("0.0000"),
         ge=Decimal("0.0000"),
@@ -78,6 +80,7 @@ class SubscriptionLineUpdate(BaseModel):
     """Payload to update an existing line item on a draft subscription."""
     quantity: Optional[int] = Field(None, ge=1, description="Updated quantity")
     unit_price: Optional[Decimal] = Field(None, ge=Decimal("0.00"), decimal_places=2, description="Updated unit price")
+    tax_id: Optional[str] = Field(None, description="Updated tax schedule ID")
     tax_rate: Optional[Decimal] = Field(None, ge=Decimal("0.0000"), decimal_places=4, description="Updated tax rate")
     discount_amount: Optional[Decimal] = Field(None, ge=Decimal("0.00"), decimal_places=2, description="Updated discount")
     description: Optional[str] = Field(None, max_length=255, description="Updated description")

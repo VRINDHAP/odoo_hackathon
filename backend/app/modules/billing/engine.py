@@ -27,6 +27,7 @@ from app.modules.discounts.service import DiscountService
 from app.modules.invoices.models import Invoice, InvoiceLine, InvoiceStatus
 from app.modules.subscriptions.models import Subscription, SubscriptionStatus
 from app.modules.subscriptions.service import get_plan_policy
+from app.modules.taxes.service import TaxService
 from app.modules.subscriptions.utils import (
     calculate_billing_period_range,
     calculate_next_billing_date,
@@ -175,11 +176,26 @@ class BillingEngine:
                         qty = Decimal(str(sub_line.quantity))
                         unit_p = Decimal(str(sub_line.unit_price))
                         line_sub = round_half_up(qty * unit_p, 2)
-                        subtotal += line_sub
 
-                        # Compute line-level tax snapshot
-                        tax_pct = Decimal(str(sub_line.tax_rate)) if sub_line.tax_rate else Decimal("0.00")
-                        line_tax = round_half_up(line_sub * (tax_pct / Decimal("100.0")), 2)
+                        # Compute line-level tax snapshot using Nandana's TaxService [PDF 5.7, 7.1]
+                        if sub_line.tax_id:
+                            try:
+                                tax_res = TaxService.calculate_tax(db=db, tax_id=sub_line.tax_id, amount=line_sub)
+                                line_tax = tax_res.tax_amount
+                                line_subtotal = tax_res.taxable_amount
+                                line_total = tax_res.total_amount
+                            except Exception:
+                                tax_pct = Decimal(str(sub_line.tax_rate)) if sub_line.tax_rate else Decimal("0.00")
+                                line_tax = round_half_up(line_sub * (tax_pct / Decimal("100.0")), 2)
+                                line_subtotal = line_sub
+                                line_total = line_sub + line_tax
+                        else:
+                            tax_pct = Decimal(str(sub_line.tax_rate)) if sub_line.tax_rate else Decimal("0.00")
+                            line_tax = round_half_up(line_sub * (tax_pct / Decimal("100.0")), 2)
+                            line_subtotal = line_sub
+                            line_total = line_sub + line_tax
+
+                        subtotal += line_subtotal
                         tax_total += line_tax
 
                         inv_line = InvoiceLine(
@@ -192,7 +208,7 @@ class BillingEngine:
                             discount_amount=Decimal("0.00"),
                             tax_id=sub_line.tax_id,
                             tax_amount=line_tax,
-                            line_total=line_sub + line_tax,
+                            line_total=line_total,
                         )
                         line_items.append(inv_line)
 

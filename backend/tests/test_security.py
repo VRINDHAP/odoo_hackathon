@@ -3,7 +3,6 @@ Unit Tests for BE-1.2: Password Hashing, JWT Tokens, and Identity ORM Models.
 """
 from datetime import datetime, timedelta
 import pytest
-from passlib.hash import bcrypt
 from app.core.db import engine, Base, SessionLocal
 from app.core.errors import UnauthorizedError
 from app.core.security import (

@@ -241,6 +241,7 @@ class SubscriptionService:
                 description=line_req.description,
                 quantity=line_req.quantity,
                 unit_price=price,
+                tax_id=line_req.tax_id,
                 tax_rate=tax_rate,
                 discount_amount=discount,
                 subtotal=calculated["subtotal"],
