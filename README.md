@@ -1,97 +1,120 @@
 # Brightloop
 
-> **Modern Subscription Management & Automated Recurring Revenue Engine**  
-> An end-to-end subscription lifecycle platform featuring an executive finance workspace, self-service customer portal, and double-entry billing ledger.
+Subscription Management & Recurring Revenue Automation System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](frontend/)
-[![React](https://img.shields.io/badge/React-19-61dafb.svg)](frontend/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg)](backend/)
-[![Python](https://img.shields.io/badge/Python-3.12-3776ab.svg)](backend/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](database/)
-[![Tests Passing](https://img.shields.io/badge/Tests-39%2F39%20Passing-brightgreen.svg)](frontend/)
+Brightloop is an end-to-end platform for subscription commerce and recurring billing. It automates the full customer lifecycle from initial quotation and self-service confirmation to periodic invoice generation, tax calculation, atomic discount redemption, double-entry payment settlement, and dunning collections.
 
 ---
 
-## 🎯 Overview
+## What Brightloop Does
 
-Brightloop solves the complexities of modern subscription commerce: variable billing cadences, multi-tier pricing, dynamic tax schedules, discount redemptions, idempotent recurring billing runs, and dunning collections. Built with a high-contrast Ramp-inspired interface and a modular monolith backend, Brightloop provides complete transparency from quote to cash.
+Managing subscription revenue manually or across disconnected spreadsheets creates billing anchor drift, calculation errors, accidental overpayments, and uncoordinated customer handoffs. Brightloop provides a single source of truth across three specialized workspaces:
 
----
-
-## ✨ Key Features
-
-| Domain | Highlights |
-|---|---|
-| **🔄 Subscription Lifecycle** | 7-stage state machine (`Draft` → `Quotation` → `Confirmed` → `Active` → `Paused` → `Closed` → `Cancelled`) with calendar anchor day persistence across months. |
-| **⚡ Automated Billing Runs** | Idempotent batch billing engine (`/billing/run`) that prevents double-billing, computes inclusive/exclusive taxes, and atomically optimizes discount redemptions. |
-| **🛡️ Hard Ledger & Payments** | Append-only payment recording, overpayment prevention guards (`amount <= invoice.balance`), compensatory reversals, and 0-30/31-60/61-90/90+ dunning aging buckets. |
-| **👥 Multi-Tenant RBAC** | Distinct workspaces: **Admin** (full catalog, margins, staff, billing run, audit log), **Internal Staff** (quote generation, billing ops), and **Customer Portal** (`/portal/*`). |
-| **📊 Executive Finance Analytics** | Real-time MRR, ARR, active subscriber counts, revenue trends, churn tracking, and instant CSV exports. |
-| **⌨️ Keyboard-First UX** | Global command palette (`Ctrl+K`), segmented filter tabs, virtualized >1,000 row data tables, and zero-flicker stateful offline ledger fallback. |
+1. **Administrator Workspace**: Complete control over contracted catalog pricing, cost margins, behavioral plan flags, discount rules, batch billing runs, staff provisioning, and audit logs.
+2. **Internal Staff Workspace**: Operational quoting, sales subscription management, invoice creation, and payment recording without exposure to sensitive profit margins or system configurations.
+3. **Customer Portal**: An isolated self-service portal where customers can review active subscriptions, toggle optional add-ons on or off, confirm quotations, execute sandbox payments, and update billing details without contacting support.
 
 ---
 
-## 🏛️ Architecture
+## Core System Architecture
 
-```
-brightloop/
-├── frontend/               # React 19 + TypeScript + Vite SPA (Ramp design system)
-│   ├── src/features/       # Domain modules: auth, catalog, subscriptions, invoices, payments, reports, portal
-│   ├── src/api/            # OpenAPI client, live adapter, real-time sync bus, stateful mock engine
-│   └── src/styles/         # High-contrast slate canvas & semantic status palette
-├── backend/                # FastAPI + Python 3.12 modular monolith REST API
-│   ├── app/routers/        # Domain endpoints (catalog, subscriptions, billing, payments, reports)
-│   ├── app/services/       # Business logic (BillingRunService, TaxService, PaymentService)
-│   └── app/db/             # SQLAlchemy 2.0 models, Alembic migrations, demo seeders
-└── database/               # PostgreSQL schema & indexing definitions
-```
+### 1. Subscription Lifecycle State Machine
+Subscriptions transition through seven deterministic states governed by strict business rules:
+- **Draft**: Initial entry for line items, quantities, and pricing configuration.
+- **Quotation**: Formal quote submitted to customer with active pricing terms.
+- **Confirmed**: Customer acceptance received.
+- **Active**: Service active with fixed calendar anchor day (e.g., day 31 persists as Jan 31 -> Feb 28 -> Mar 31).
+- **Paused**: Temporarily halted; billing engine skips generation and reports exclude active metrics.
+- **Closed**: Terminated per plan terms or mutual agreement.
+- **Cancelled**: Terminated prior to activation.
+
+### 2. Idempotent Recurring Billing Engine
+The batch billing service scans all active subscriptions due on or before a target date:
+- Generates snapshot invoices with line items, quantities, and contracted rates.
+- Evaluates and applies the optimal valid discount rule (percentage or fixed).
+- Calculates exact tax breakdown supporting both inclusive and exclusive tax schedules.
+- Advances the next billing date to the next cycle while preserving calendar anchor rules.
+- Prevents double-billing: Repeated execution for the same cycle safely detects existing invoices and skips duplicate generation.
+
+### 3. Payment Settlement and Overpayment Guard
+- Supports multiple payment methods (Card, Bank Transfer, UPI, Cash) with unique reference tracking.
+- Hard validation prevents any payment amount from exceeding the remaining invoice balance.
+- Paying the full balance automatically marks the invoice as Paid.
+- Compensatory payment reversal decrements paid amounts and restores invoice balances.
+- Dunning engine groups unpaid invoices into 0-30, 31-60, 61-90, and 90+ day aging buckets with reminder tracking.
+
+### 4. Executive Finance Analytics
+Real-time dashboard metrics computed dynamically from the underlying ledger:
+- Monthly Recurring Revenue (MRR) with normalized monthly/yearly cadences.
+- Annual Recurring Revenue (ARR).
+- Active subscriber counts excluding paused and closed accounts.
+- Revenue trends with interactive horizon filtering (3, 6, 12 months).
+- CSV report exports for subscriptions, payments, and overdue accounts.
 
 ---
 
-## 🚀 Quick Start
+## Technical Stack
 
-### 1. Frontend Workspace (Standalone with Stateful Ledger)
+- **Frontend**: React 19, TypeScript, Vite, React Router 7, Vitest, Testing Library.
+- **Backend**: Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic.
+- **Database**: PostgreSQL 16 (production) with SQLite support for isolated tests.
+- **Cache & Concurrency**: Redis 7-alpine for distributed locking and telemetry caching.
+- **Design System**: High-contrast slate canvas, clear physical element separation, and semantic status tags.
+
+---
+
+## Quick Start
+
+### Frontend (Standalone Mode)
+The frontend includes a built-in stateful ledger mock engine that mirrors the backend OpenAPI 3.0 specification. You can run and evaluate the complete UI without requiring external databases:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
-### 2. Full Stack with Docker
+The application will be accessible at: `http://localhost:5173`
+
+### Full Stack (Docker Compose)
+To run the complete production stack (FastAPI web server, PostgreSQL, Redis):
+
 ```bash
 docker compose up -d
 docker compose exec backend alembic upgrade head
 docker compose exec backend python -m app.db.seed
 ```
-- API Documentation: **[http://localhost:8000/docs](http://localhost:8000/docs)**
-- Health Probe: **[http://localhost:8000/health](http://localhost:8000/health)**
+
+- Web Application: `http://localhost:5173`
+- Backend API Docs (Swagger): `http://localhost:8000/docs`
+- Backend Health Probe: `http://localhost:8000/health`
 
 ---
 
-## 🔑 Demo Accounts
+## Demo Accounts
 
-Use one-click demo login buttons or manual sign-in:
+The login screen provides one-click workspace access buttons for evaluation, or you can enter credentials manually:
 
-| Role | Email | Password | Scope |
+| Role | Email | Password | Access Scope |
 |---|---|---|---|
-| **Administrator** | `admin@brightloop.io` | `Admin@2026!` | Full CRUD, Unit Margins, Discounts, Billing Run, Audit Log, Settings |
-| **Internal Staff** | `nandana@brightloop.io` | `Staff@2026!` | Quotations, Subscriptions, Invoices, Payments, Read-Only Catalog |
-| **Customer Portal** | `arjun@vervecloud.in` | `Customer@2026!` | Self-Service Subscriptions, Optional Add-ons, Invoice Pay Now, Billing Profile |
+| Administrator | admin@brightloop.io | Admin@2026! | Full CRUD, Margins, Discounts, Billing Run, Audit Log, Settings |
+| Internal Staff | nandana@brightloop.io | Staff@2026! | Quotations, Subscriptions, Invoices, Payments, Read-Only Catalog |
+| Customer | arjun@vervecloud.in | Customer@2026! | Customer Portal (/portal/*), Subscriptions, Invoices, Pay Now |
 
 ---
 
-## 🧪 Verification & Quality Gates
+## Quality and Verification
+
+All code adheres to strict type checks, linting, and automated unit and integration tests:
 
 ```bash
-# Type safety check (0 errors)
+# Type check (0 errors)
 npm --prefix frontend run typecheck
 
-# Code style & quality check (0 warnings)
+# Code style and linting (0 warnings)
 npm --prefix frontend run lint
 
-# Comprehensive test suite (39/39 passing across 10 suites)
+# Comprehensive test suite (39 tests across 10 suites)
 npm --prefix frontend run test
 
 # Production bundle build
@@ -100,9 +123,9 @@ npm --prefix frontend run build
 
 ---
 
-## 🤝 Community & Governance
+## Repository Governance
 
-- [Code of Conduct](CODE_OF_CONDUCT.md) — Contributor Covenant v2.1
-- [Contributing Guide](CONTRIBUTING.md) — Development workflow, code standards, and PR process
-- [Security Policy](SECURITY.md) — Vulnerability reporting and disclosure guidelines
-- [License](LICENSE) — MIT License
+- [Code of Conduct](CODE_OF_CONDUCT.md): Contributor Covenant v2.1
+- [Contributing Guidelines](CONTRIBUTING.md): Branching, commit conventions, and review workflow
+- [Security Policy](SECURITY.md): Vulnerability reporting procedures and response SLAs
+- [License](LICENSE): MIT License

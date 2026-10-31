@@ -8,10 +8,10 @@ Brightloop handles critical recurring financial workflows, subscriptions, billin
 
 Only the latest release version on the `main` branch receives active security updates.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 1.0.x   | Yes       |
+| < 1.0   | No        |
 
 ---
 
