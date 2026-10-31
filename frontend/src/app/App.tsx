@@ -2,7 +2,6 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { ToastProvider } from '../hooks/useToast';
-import { ModuleStageCard } from './ModuleStageCard';
 import { PortalLayout } from './PortalLayout';
 import { RouteGuard } from './RouteGuard';
 import { WorkspaceLayout } from './WorkspaceLayout';
@@ -96,6 +95,26 @@ const DashboardPage = lazy(() =>
 const ReportsPage = lazy(() =>
   import('../features/reports/ReportsPage').then((m) => ({
     default: m.ReportsPage,
+  }))
+);
+const PortalSubscriptionsPage = lazy(() =>
+  import('../features/portal/PortalSubscriptionsPage').then((m) => ({
+    default: m.PortalSubscriptionsPage,
+  }))
+);
+const PortalInvoicesPage = lazy(() =>
+  import('../features/portal/PortalInvoicesPage').then((m) => ({
+    default: m.PortalInvoicesPage,
+  }))
+);
+const PortalPaymentsPage = lazy(() =>
+  import('../features/portal/PortalPaymentsPage').then((m) => ({
+    default: m.PortalPaymentsPage,
+  }))
+);
+const PortalProfilePage = lazy(() =>
+  import('../features/portal/PortalProfilePage').then((m) => ({
+    default: m.PortalProfilePage,
   }))
 );
 
@@ -193,50 +212,10 @@ export const AppRoutes: React.FC = () => (
         }
       >
         <Route index element={<Navigate to="/portal/subscriptions" replace />} />
-        <Route
-          path="subscriptions"
-          element={
-            <ModuleStageCard
-              partNumber={7}
-              eyebrow="Customer Portal"
-              title="My Subscriptions"
-              summary="View your active plan, upcoming renewal date, and request upgrades or pauses."
-            />
-          }
-        />
-        <Route
-          path="invoices"
-          element={
-            <ModuleStageCard
-              partNumber={7}
-              eyebrow="Customer Portal"
-              title="My Invoices"
-              summary="Download tax invoice PDFs and settle balances via online sandbox checkout."
-            />
-          }
-        />
-        <Route
-          path="payments"
-          element={
-            <ModuleStageCard
-              partNumber={7}
-              eyebrow="Customer Portal"
-              title="Payment History"
-              summary="Browse completed payment receipts and settlement references."
-            />
-          }
-        />
-        <Route
-          path="profile"
-          element={
-            <ModuleStageCard
-              partNumber={7}
-              eyebrow="Customer Portal"
-              title="Profile & Billing Address"
-              summary="Update your organization billing address and portal account password."
-            />
-          }
-        />
+        <Route path="subscriptions" element={<PortalSubscriptionsPage />} />
+        <Route path="invoices" element={<PortalInvoicesPage />} />
+        <Route path="payments" element={<PortalPaymentsPage />} />
+        <Route path="profile" element={<PortalProfilePage />} />
       </Route>
 
       <Route path="*" element={<RootRedirect />} />

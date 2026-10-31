@@ -180,25 +180,25 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 7: Customer Portal & Polish [PDF 17]
 
-- [ ] **FE-7.1**: Build Customer Portal layout and "My Subscriptions" view [PDF 1, 2, 8, 12].
+- [x] **FE-7.1**: Build Customer Portal layout and "My Subscriptions" view [PDF 1, 2, 8, 12].
   - **Input**: `GET /me/subscriptions`.
   - **Expected Output**: Customer-facing portal displaying active plan card, next billing date, status chip, and pause/cancel/upgrade request buttons.
   - **Acceptance Test**: Portal strictly displays rows where customer owns subscription; no administrative controls exposed.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-7.2**: Build Customer Portal "My Invoices" view with PDF download and "Pay Now" gateway checkout [PDF 2, 7.4, 8, 12].
+- [x] **FE-7.2**: Build Customer Portal "My Invoices" view with PDF download and "Pay Now" gateway checkout [PDF 2, 7.4, 8, 12].
   - **Input**: `GET /me/invoices`, `POST /me/invoices/{id}/pay`.
   - **Expected Output**: Invoices list with paid/outstanding badges, PDF download link, and "Pay Now" button initiating payment gateway modal with built-in sandbox/simulation toggle (avoiding excessive reliance on live third-party gateway APIs).
   - **Acceptance Test**: Successful gateway payment (live or simulated sandbox) updates invoice badge to Paid; receipt downloadable.
   - **Dependencies**: FE-7.1.
 
-- [ ] **FE-7.3**: Build Customer Profile and Password management screen [PDF 2, 8, 12].
+- [x] **FE-7.3**: Build Customer Profile and Password management screen [PDF 2, 8, 12].
   - **Input**: `PATCH /me/profile`.
   - **Expected Output**: Profile editing form for billing address, phone, and password change.
   - **Acceptance Test**: Updates profile successfully; rejects weak password with rule checklist.
   - **Dependencies**: FE-7.1.
 
-- [ ] **FE-7.4**: Implement Performance Optimizations (virtualization, code-splitting, skeleton loaders, debounce) [PDF 1, 11].
+- [x] **FE-7.4**: Implement Performance Optimizations (virtualization, code-splitting, skeleton loaders, debounce) [PDF 1, 11].
   - **Input**: Lazy-loaded routes, virtual table components, skeleton screens, 300 ms debounce hook.
   - **Expected Output**: Snappy user experience meeting the < 2s page load budget with thousands of records.
   - **Acceptance Test**: Lighthouse / performance audit confirms interactive render < 2.0 seconds.
