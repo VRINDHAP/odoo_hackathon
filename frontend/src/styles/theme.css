@@ -8,69 +8,69 @@
    ========================================================================== */
 
 :root {
-  /* --- Brand & Accent (ramp.design.md) --- */
-  --color-primary: #ffe74c;
-  --color-primary-hover: #f9de33;
-  --color-on-primary: #212121;
-  --color-solar: #f4d35e;
-  --color-blaze: #e07a3c;
+  /* --- Brand & Accent --- */
+  --color-primary: #facc15;
+  --color-primary-hover: #eab308;
+  --color-on-primary: #0f172a;
+  --color-solar: #f59e0b;
+  --color-blaze: #ea580c;
 
-  /* --- Surfaces --- */
-  --color-canvas-sand: #f4f2f0;
-  --color-canvas-sand-deep: #ebe7e3;
+  /* --- Surfaces & Clear Separators --- */
+  --color-canvas-sand: #f1f5f9;
+  --color-canvas-sand-deep: #e2e8f0;
   --color-canvas: #ffffff;
-  --color-canvas-cool: #f7fafc;
-  --color-canvas-hover: #edf2f7;
-  --color-hairline: #e2e8f0;
-  --color-hairline-strong: #cbd5e1;
+  --color-canvas-cool: #f8fafc;
+  --color-canvas-hover: #f1f5f9;
+  --color-hairline: #cbd5e1;
+  --color-hairline-strong: #94a3b8;
 
-  /* --- Ink Ladder --- */
-  --color-ink: #212121;
-  --color-ink-soft: #2b2e35;
-  --color-ink-secondary: #2d3748;
-  --color-ink-mute: #4a5568;
-  --color-ink-mute-2: #718096;
-  --color-ink-mute-3: #a0aec0;
+  /* --- Ink Ladder (High-Contrast Slate) --- */
+  --color-ink: #0f172a;
+  --color-ink-soft: #1e293b;
+  --color-ink-secondary: #334155;
+  --color-ink-mute: #475569;
+  --color-ink-mute-2: #64748b;
+  --color-ink-mute-3: #94a3b8;
 
   /* --- Semantic System Tokens --- */
-  --color-success: #38a169;
-  --color-danger: #e53e3e;
-  --color-warning: #b45309;
-  --color-info: #1d4ed8;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --color-info: #2563eb;
 
-  /* --- SPEC.md §12.4 Semantic Status Chips Palette --- */
-  --chip-draft-text: #475569;
+  /* --- Semantic Status Chips Palette (High Visibility & Contrast) --- */
+  --chip-draft-text: #334155;
   --chip-draft-bg: #f1f5f9;
-  --chip-draft-border: #cbd5e1;
+  --chip-draft-border: #94a3b8;
 
-  --chip-quotation-text: #b45309;
+  --chip-quotation-text: #92400e;
   --chip-quotation-bg: #fef3c7;
-  --chip-quotation-border: #fde68a;
+  --chip-quotation-border: #f59e0b;
 
-  --chip-confirmed-text: #1d4ed8;
+  --chip-confirmed-text: #1e40af;
   --chip-confirmed-bg: #dbeafe;
-  --chip-confirmed-border: #bfdbfe;
+  --chip-confirmed-border: #3b82f6;
 
-  --chip-active-text: #047857;
+  --chip-active-text: #065f46;
   --chip-active-bg: #d1fae5;
-  --chip-active-border: #a7f3d0;
+  --chip-active-border: #10b981;
 
-  --chip-paused-text: #c2410c;
+  --chip-paused-text: #9a3412;
   --chip-paused-bg: #ffedd5;
-  --chip-paused-border: #fed7aa;
+  --chip-paused-border: #f97316;
 
-  --chip-closed-text: #6b21a8;
+  --chip-closed-text: #581c87;
   --chip-closed-bg: #f3e8ff;
-  --chip-closed-border: #e9d5ff;
+  --chip-closed-border: #a855f7;
 
-  --chip-cancelled-text: #be123c;
+  --chip-cancelled-text: #9f1239;
   --chip-cancelled-bg: #ffe4e6;
-  --chip-cancelled-border: #fecdd3;
+  --chip-cancelled-border: #f43f5e;
 
-  --chip-overdue-text: #be123c;
+  --chip-overdue-text: #9f1239;
   --chip-overdue-bg: #ffe4e6;
-  --chip-overdue-border: #fecdd3;
-  --chip-paid-text: #047857;
+  --chip-overdue-border: #f43f5e;
+  --chip-paid-text: #065f46;
 
   /* --- SPEC.md §12.4 Base Aliases --- */
   --bg-primary: var(--color-canvas-sand);
@@ -312,7 +312,12 @@ textarea {
   border: 1px solid var(--color-hairline);
   border-radius: var(--rounded-lg);
   padding: 32px 24px 32px 32px;
-  transition: transform 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.product-tile:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .product-tile-compact {
@@ -321,6 +326,12 @@ textarea {
   border: 1px solid var(--color-hairline);
   border-radius: var(--rounded-lg);
   padding: 20px 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.product-tile-compact:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .product-tile-dark {
@@ -431,35 +442,40 @@ textarea {
 .btn-cta-chip {
   background-color: var(--color-primary);
   color: var(--color-on-primary);
-  border-color: var(--color-primary);
+  border: 1.5px solid #ca8a04;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .btn-cta-chip:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+  border-color: #a16207;
 }
 
 /* Outline Geometry Secondary Button */
 .btn-outline {
   background-color: var(--color-canvas);
   color: var(--color-ink);
-  border-color: var(--color-hairline-strong);
+  border: 1.5px solid var(--color-hairline-strong);
+  font-weight: 600;
 }
 
 .btn-outline:hover:not(:disabled) {
   background-color: var(--color-canvas-hover);
-  border-color: var(--color-ink-mute-2);
+  border-color: var(--color-ink);
 }
 
 /* Sand Secondary Text Button */
 .btn-secondary-sand {
   background-color: var(--color-canvas-sand);
   color: var(--color-ink);
-  border-color: transparent;
+  border: 1px solid var(--color-hairline);
+  font-weight: 500;
 }
 
 .btn-secondary-sand:hover:not(:disabled) {
   background-color: var(--color-canvas-sand-deep);
+  border-color: var(--color-hairline-strong);
 }
 
 /* Dark Ink Soft Button */
@@ -508,7 +524,8 @@ textarea {
 .form-label {
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-lh);
-  color: var(--color-ink-secondary);
+  color: var(--color-ink);
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -519,7 +536,7 @@ textarea {
 .form-textarea {
   background-color: var(--color-canvas);
   color: var(--color-ink);
-  border: 1px solid var(--color-hairline-strong);
+  border: 1.5px solid var(--color-hairline);
   border-radius: var(--rounded-ms);
   padding: 9px 14px;
   font-size: var(--text-body-sm-size);
@@ -531,14 +548,14 @@ textarea {
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: var(--color-ink-mute-3);
+  color: var(--color-ink-mute-2);
 }
 
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: var(--color-ink);
-  box-shadow: 0 0 0 3px rgba(33, 33, 33, 0.07);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .form-input-error {
@@ -550,30 +567,33 @@ textarea {
   font-size: 12px;
   line-height: 16px;
   color: var(--color-danger);
+  font-weight: 500;
 }
 
 .form-helper-text {
   font-size: 12px;
   line-height: 16px;
-  color: var(--color-ink-mute-2);
+  color: var(--color-ink-mute);
 }
 
-/* --- Semantic Status Chips (Compact 8px Radius) --- */
+/* --- Semantic Status Chips (Compact 8px Radius, Bold Recognition) --- */
 .status-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--rounded-md);
   font-size: var(--text-caption-size);
   line-height: 18px;
+  font-weight: 600;
   border: 1px solid transparent;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .status-chip-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: var(--rounded-pill);
   background-color: currentColor;
 }
@@ -644,8 +664,9 @@ textarea {
 .app-sidebar {
   width: var(--sidebar-width);
   flex-shrink: 0;
-  background-color: var(--color-canvas-sand);
+  background-color: #ffffff;
   border-right: 1px solid var(--color-hairline);
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -661,6 +682,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--color-hairline);
+  background-color: #ffffff;
 }
 
 .brand-mark {
@@ -701,27 +723,30 @@ textarea {
   gap: 10px;
   padding: 8px 12px;
   border-radius: var(--rounded-md);
-  color: var(--color-ink-mute);
+  color: var(--color-ink-secondary);
   font-size: var(--text-body-sm-size);
+  font-weight: 500;
   transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .sidebar-link:hover {
-  background-color: var(--color-canvas-sand-deep);
+  background-color: var(--color-canvas-hover);
   color: var(--color-ink);
 }
 
 .sidebar-link-active {
-  background-color: var(--color-canvas);
+  background-color: #f1f5f9;
   color: var(--color-ink);
-  border: 1px solid var(--color-hairline);
-  box-shadow: 0 1px 2px rgba(33, 33, 33, 0.04);
+  font-weight: 600;
+  border-left: 3px solid var(--color-ink);
+  border-radius: 0 var(--rounded-md) var(--rounded-md) 0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .sidebar-user-footer {
   padding: 12px 14px;
   border-top: 1px solid var(--color-hairline);
-  background-color: var(--color-canvas-sand);
+  background-color: var(--color-canvas-cool);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -865,7 +890,7 @@ textarea {
   height: var(--nav-height);
   padding: 0 28px;
   border-bottom: 1px solid var(--color-hairline);
-  background-color: var(--color-canvas-sand);
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -873,6 +898,7 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 20;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .app-content {
@@ -897,13 +923,14 @@ textarea {
   height: var(--nav-height);
   padding: 0 32px;
   border-bottom: 1px solid var(--color-hairline);
-  background-color: var(--color-canvas-sand);
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 20;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .portal-nav-links {
@@ -999,6 +1026,7 @@ textarea {
   border: 1px solid var(--color-hairline);
   border-radius: var(--rounded-lg);
   overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
 }
 
 .table-toolbar {
@@ -1026,21 +1054,22 @@ textarea {
 
 .ramp-table th,
 .data-table th {
-  padding: 10px 16px;
+  padding: 11px 16px;
   font-size: var(--text-micro-size);
   line-height: 18px;
   letter-spacing: var(--text-micro-ls);
   text-transform: uppercase;
-  color: var(--color-ink-mute);
-  background-color: var(--color-canvas-cool);
-  border-bottom: 1px solid var(--color-hairline);
+  color: #334155;
+  background-color: #f8fafc;
+  border-bottom: 2px solid var(--color-hairline);
   white-space: nowrap;
   user-select: none;
+  font-weight: 700;
 }
 
 .ramp-table td,
 .data-table td {
-  padding: 11px 16px;
+  padding: 12px 16px;
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-lh);
   color: var(--color-ink);

@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability Reporting
+    url: mailto:security@brightloop.io
+    about: Please report security vulnerabilities privately.
+  - name: Community Discussions & Questions
+    url: https://github.com/brightloop/brightloop/discussions
+    about: Ask questions, share ideas, and connect with other contributors.
+

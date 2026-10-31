@@ -8,7 +8,7 @@ import { generateIdempotencyKey } from '../utils/idempotency';
 import { normalizeEmail } from '../utils/validation';
 import { normalizeLiveResponse, rewriteLiveRequest } from './liveAdapter';
 import { handleMockRequest } from './mockEngine';
-import { emitDataMutation, markSyncedNow } from './realtimeBus';
+import { emitDataMutation, markSyncedNow, subscribeRealtimeSync } from './realtimeBus';
 import { tokenStore } from './tokenStore';
 
 const API_BASE = '/api/v1';
@@ -49,9 +49,22 @@ export class ApiClientError extends Error {
 let activeRefreshPromise: Promise<boolean> | null = null;
 let dataSourceMode: 'live' | 'mock-fallback' = 'mock-fallback';
 let preferMockSession = false;
+let liveBackendOffline = false;
 
 export function getApiDataSourceMode(): 'live' | 'mock-fallback' {
   return dataSourceMode;
+}
+
+export function resetLiveBackendStatus(): void {
+  liveBackendOffline = false;
+}
+
+if (typeof window !== 'undefined') {
+  subscribeRealtimeSync((event) => {
+    if (event.source === 'manual') {
+      liveBackendOffline = false;
+    }
+  });
 }
 
 function isProxyOrUnmountedFallback(
@@ -102,8 +115,8 @@ async function tryRefreshAccessToken(): Promise<boolean> {
       const refreshToken = tokenStore.getRefreshToken();
       const hintUserId = tokenStore.getRefreshHintUserId();
 
-      // If no live refresh token exists (or we are in a mock demo session), restore mock session directly if hinted
-      if (preferMockSession || (!refreshToken && hintUserId)) {
+      // If no live refresh token exists (or we are in a mock demo session or live backend is offline), restore mock session directly if hinted
+      if (liveBackendOffline || preferMockSession || (!refreshToken && hintUserId)) {
         const mockRes = await handleMockRequest('POST', '/auth/refresh');
         if (mockRes.status === 200 && mockRes.data) {
           const data = mockRes.data as AuthResponse;
@@ -129,6 +142,7 @@ async function tryRefreshAccessToken(): Promise<boolean> {
 
       const maybeBody = await res.clone().json().catch(() => null);
       if (isProxyOrUnmountedFallback(res.status, maybeBody) || hintUserId) {
+        liveBackendOffline = true;
         const mockRes = await handleMockRequest('POST', '/auth/refresh');
         if (mockRes.status === 200 && mockRes.data) {
           const data = mockRes.data as AuthResponse;
@@ -138,6 +152,7 @@ async function tryRefreshAccessToken(): Promise<boolean> {
         }
       }
     } catch {
+      liveBackendOffline = true;
       const mockRes = await handleMockRequest('POST', '/auth/refresh');
       if (mockRes.status === 200 && mockRes.data) {
         const data = mockRes.data as AuthResponse;
@@ -187,8 +202,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers['Idempotency-Key'] = generateIdempotencyKey();
   }
 
-  // Attempt live /api/v1 backend first unless session is pinned to mock engine
-  let fallbackToMock = preferMockSession;
+  // Attempt live /api/v1 backend first unless session is pinned to mock engine or backend is offline
+  let fallbackToMock = preferMockSession || liveBackendOffline;
   const rewritten = rewriteLiveRequest(method, normalizedPath, options.body);
   const isMutation =
     method !== 'GET' &&
@@ -212,6 +227,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       if (response.status === 404 || response.status >= 500) {
         const maybeJson = await response.clone().json().catch(() => null);
         if (isProxyOrUnmountedFallback(response.status, maybeJson)) {
+          liveBackendOffline = true;
           fallbackToMock = true;
         }
       }
@@ -311,6 +327,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       if (error instanceof ApiClientError) {
         throw error;
       }
+      liveBackendOffline = true;
       fallbackToMock = true;
     }
   }
@@ -344,6 +361,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
 export function resetClientModeForTests(): void {
   preferMockSession = false;
+  liveBackendOffline = false;
   dataSourceMode = 'mock-fallback';
 }
 
