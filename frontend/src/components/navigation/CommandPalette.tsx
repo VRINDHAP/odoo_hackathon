@@ -402,7 +402,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <span className="kbd-chip">Enter</span> to open · <span className="kbd-chip">Esc</span> to dismiss
           </span>
           <span className="type-caption" style={{ fontSize: 11 }}>
-            Brightloop Quick Jump
+            SSVN Systems Quick Jump
           </span>
         </div>
       </div>

@@ -75,40 +75,51 @@ export const PortalSubscriptionsPage: React.FC = () => {
   const [requestNote, setRequestNote] = useState('');
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
-  const loadMySubscriptions = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [subsData, catalogData] = await Promise.all([
-        apiRequest<Subscription[]>('/me/subscriptions'),
-        apiRequest<PortalCatalogResponse>('/me/catalog').catch(() => null),
-      ]);
-      setSubscriptions(subsData);
-      if (catalogData) {
-        setCatalog(catalogData);
-        if (!subPlanId && catalogData.plans[0]) {
-          setSubPlanId(catalogData.plans[0].id);
-          setSubQuantity(String(catalogData.plans[0].min_quantity));
+  const loadMySubscriptions = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const [subsData, catalogData] = await Promise.all([
+          apiRequest<Subscription[]>('/me/subscriptions'),
+          apiRequest<PortalCatalogResponse>('/me/catalog').catch(() => null),
+        ]);
+        setSubscriptions(subsData);
+        if (catalogData) {
+          setCatalog(catalogData);
+          if (catalogData.plans[0]) {
+            const firstPlan = catalogData.plans[0];
+            setSubPlanId((prev) => {
+              if (!prev) setSubQuantity(String(firstPlan.min_quantity));
+              return prev || firstPlan.id;
+            });
+          }
+          const coreProds = catalogData.products.filter((p) => p.type !== 'addon');
+          const defaultProd = coreProds[0] ?? catalogData.products[0];
+          if (defaultProd) {
+            setSubProductId((prev) => prev || defaultProd.id);
+          }
         }
-        const coreProds = catalogData.products.filter((p) => p.type !== 'addon');
-        if (!subProductId && (coreProds[0] ?? catalogData.products[0])) {
-          setSubProductId((coreProds[0] ?? catalogData.products[0]).id);
-        }
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : 'Unable to load your subscriptions',
+          'error'
+        );
+      } finally {
+        if (!silent) setIsLoading(false);
       }
-    } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : 'Unable to load your subscriptions',
-        'error'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showToast, subPlanId, subProductId]);
+    },
+    [showToast]
+  );
 
   useEffect(() => {
-    void loadMySubscriptions();
+    void loadMySubscriptions(false);
   }, [loadMySubscriptions]);
 
-  useRealtimeSync(loadMySubscriptions, { pollIntervalMs: 30000 });
+  const syncSubscriptionsSilently = useCallback(() => {
+    void loadMySubscriptions(true);
+  }, [loadMySubscriptions]);
+
+  useRealtimeSync(syncSubscriptionsSilently, { pollIntervalMs: 30000 });
 
   const addonProducts = useMemo(
     () => (catalog?.products ?? []).filter((p) => p.type === 'addon'),

@@ -279,7 +279,7 @@ export const StaffManagementPage: React.FC = () => {
           <FormInput
             label="Work Email"
             type="email"
-            placeholder="sooraj@brightloop.io"
+            placeholder="sooraj@ssvnsystems.com"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             error={inviteErrors.email}

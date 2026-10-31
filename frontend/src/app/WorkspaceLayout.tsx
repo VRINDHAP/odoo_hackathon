@@ -211,7 +211,7 @@ export const WorkspaceLayout: React.FC = () => {
             <span className="brand-bolt">
               <Zap size={14} />
             </span>
-            <span>Brightloop</span>
+            <span>SSVN Systems</span>
           </Link>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <StatusChip status={user?.role ?? 'staff'} showDot={false} />

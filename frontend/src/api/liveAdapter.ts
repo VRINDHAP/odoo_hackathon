@@ -195,7 +195,7 @@ export function normalizeLiveResponse<T>(
         id: String(row.id ?? ''),
         timestamp: String(row.timestamp ?? row.at ?? new Date().toISOString()),
         actor_id: String(row.actor_id ?? 'system'),
-        actor_email: String(row.actor_email ?? row.actor_id ?? 'system@brightloop.io'),
+        actor_email: String(row.actor_email ?? row.actor_id ?? 'system@ssvnsystems.com'),
         actor_role: ((row.actor_role as UserRole) ?? 'admin'),
         entity: String(row.entity ?? ''),
         entity_id: String(row.entity_id ?? ''),

@@ -1,4 +1,4 @@
-# Frontend — Subscription Management System (Brightloop)
+# Frontend — Subscription Management System (SSVN Systems)
 
 ## 1. Purpose
 This folder contains the complete technical specification, task breakdown, interface requirements, and definition of done for the client-side single-page application (SPA) serving Admin, Internal Staff, and Customers (Customer Portal) [PDF 1, 3, 12].

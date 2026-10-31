@@ -349,7 +349,7 @@ export const PortalInvoicesPage: React.FC = () => {
       {/* Online Payment Gateway Modal with Built-In Sandbox Toggle (FE-7.2) */}
       <Modal
         isOpen={Boolean(checkoutInvoice)}
-        eyebrow="Brightloop Checkout Gateway"
+        eyebrow="SSVN Systems Checkout Gateway"
         title={
           completedReceipt
             ? `Payment Confirmed — ${completedReceipt.invoice.number}`

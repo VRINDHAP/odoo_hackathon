@@ -295,9 +295,9 @@ export const InvoiceDetailPage: React.FC = () => {
         >
           <div>
             <span className="eyebrow-cap">Issued By</span>
-            <div style={{ marginTop: 4 }}>Brightloop Software Pvt Ltd</div>
+            <div style={{ marginTop: 4 }}>SSVN Systems Pvt Ltd</div>
             <div className="type-caption">
-              Indiranagar 100 Ft Rd, Bengaluru, KA 560038 · GSTIN: 29AABCB7781M1Z4
+              Indiranagar 100 Ft Rd, Bengaluru, KA 560038 · GSTIN: 29AABCS7781M1Z4
             </div>
             <div className="type-caption">
               Issue Date: {formatDate(invoice.issue_date)} · Due Date: {formatDate(invoice.due_date)}

@@ -482,7 +482,7 @@ export const ProductsPage: React.FC = () => {
         <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <FormInput
             label="Product Name"
-            placeholder="Brightloop Core ERP Suite"
+            placeholder="SSVN Systems Core ERP Suite"
             value={name}
             onChange={(e) => setName(e.target.value)}
             error={formErrors.name}

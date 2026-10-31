@@ -155,7 +155,7 @@ export const PaymentsPage: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `brightloop-payments-register-${new Date().toISOString().slice(0, 10)}.csv`;
+      anchor.download = `ssvn-systems-payments-register-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

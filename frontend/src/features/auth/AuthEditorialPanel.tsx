@@ -8,7 +8,7 @@ export const AuthEditorialPanel: React.FC = () => (
         <span className="brand-bolt">
           <Zap size={14} />
         </span>
-        <span>Brightloop</span>
+        <span>SSVN Systems</span>
       </div>
     </div>
 
@@ -51,7 +51,7 @@ export const AuthEditorialPanel: React.FC = () => (
 
     <div className="type-caption" style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span>3-Layer RBAC · PostgreSQL Relational Core</span>
-      <span>Brightloop v1.0</span>
+      <span>SSVN Systems v1.0</span>
     </div>
   </aside>
 );

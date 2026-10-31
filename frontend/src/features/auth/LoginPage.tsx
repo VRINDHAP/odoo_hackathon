@@ -72,7 +72,7 @@ export const LoginPage: React.FC = () => {
         <div className="product-tile" style={{ maxWidth: 440, width: '100%', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <span className="eyebrow-cap">Workspace Sign In</span>
-            <span className="brand-bolt" title="Brightloop">
+            <span className="brand-bolt" title="SSVN Systems">
               <Zap size={13} />
             </span>
           </div>
@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
             Welcome back
           </h2>
           <p className="type-caption" style={{ marginBottom: 24 }}>
-            Sign in with your Brightloop credentials to access your role workspace.
+            Sign in with your SSVN Systems credentials to access your role workspace.
           </p>
 
           {bannerError ? (
@@ -186,9 +186,9 @@ export const LoginPage: React.FC = () => {
                 variant="sand"
                 disabled={isSubmitting}
                 onClick={() => {
-                  setEmail('admin@brightloop.io');
+                  setEmail('admin@ssvnsystems.com');
                   setPassword('Admin@2026!');
-                  void performLogin('admin@brightloop.io', 'Admin@2026!');
+                  void performLogin('admin@ssvnsystems.com', 'Admin@2026!');
                 }}
               >
                 Admin (Full)
@@ -198,9 +198,9 @@ export const LoginPage: React.FC = () => {
                 variant="sand"
                 disabled={isSubmitting}
                 onClick={() => {
-                  setEmail('nandana@brightloop.io');
+                  setEmail('nandana@ssvnsystems.com');
                   setPassword('Staff@2026!');
-                  void performLogin('nandana@brightloop.io', 'Staff@2026!');
+                  void performLogin('nandana@ssvnsystems.com', 'Staff@2026!');
                 }}
               >
                 Internal Staff

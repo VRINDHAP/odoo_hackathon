@@ -63,7 +63,7 @@ export const PortalLayout: React.FC = () => {
               <span className="brand-bolt">
                 <Zap size={14} />
               </span>
-              <span>Brightloop Portal</span>
+              <span>SSVN Systems Portal</span>
             </div>
           </div>
 
