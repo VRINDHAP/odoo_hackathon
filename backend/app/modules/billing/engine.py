@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 import sys
 
 from sqlalchemy import func, text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.modules.billing.models import BillingRun
 from app.modules.discounts.service import DiscountService
@@ -91,9 +91,10 @@ class BillingEngine:
         db.commit()
         db.refresh(billing_run)
 
-        # 1. Scan for eligible active subscriptions due for billing
+        # 1. Scan for eligible active subscriptions due for billing (eager loading lines) [PDF 5.11, 7.2]
         query = (
             db.query(Subscription)
+            .options(selectinload(Subscription.lines))
             .filter(
                 Subscription.status == SubscriptionStatus.ACTIVE,
                 Subscription.next_billing_date <= today,

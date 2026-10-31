@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import uuid
 
 from sqlalchemy import desc, func, text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.db import Base
 from app.core.errors import NotFoundError
@@ -285,10 +285,10 @@ class SubscriptionService:
         customer_id: Optional[str] = None,
     ) -> Subscription:
         """
-        Retrieves a subscription by ID with tenant isolation [PDF 2, 8].
+        Retrieves a subscription by ID with tenant isolation and eager-loaded line items [PDF 2, 5.11, 8].
         If customer_id is provided, guarantees customer cannot access another customer's subscription.
         """
-        query = db.query(Subscription).filter(Subscription.id == str(subscription_id))
+        query = db.query(Subscription).options(selectinload(Subscription.lines)).filter(Subscription.id == str(subscription_id))
 
         # Enforce tenant isolation for portal callers [PDF 2]
         if customer_id:
@@ -307,12 +307,16 @@ class SubscriptionService:
         status: Optional[SubscriptionStatus] = None,
         customer_id: Optional[str] = None,
         skip: int = 0,
-        limit: int = 20,
+        limit: int = 50,
     ) -> Tuple[List[Subscription], int]:
         """
-        Retrieves paginated subscriptions with optional status and customer filters [PDF 8, 11].
+        Retrieves paginated subscriptions with eager-loaded line items [PDF 5.11, 8, 11].
+        Enforces server-side pagination with default limit=50 and max limit=100.
         """
-        query = db.query(Subscription)
+        safe_limit = min(max(1, limit), 100) if limit is not None else 50
+        safe_skip = max(0, skip) if skip is not None else 0
+
+        query = db.query(Subscription).options(selectinload(Subscription.lines))
 
         if status:
             query = query.filter(Subscription.status == status)
@@ -320,7 +324,7 @@ class SubscriptionService:
             query = query.filter(Subscription.customer_id == str(customer_id))
 
         total_count = query.count()
-        results = query.order_by(desc(Subscription.created_at)).offset(skip).limit(limit).all()
+        results = query.order_by(desc(Subscription.created_at)).offset(safe_skip).limit(safe_limit).all()
 
         return results, total_count
 

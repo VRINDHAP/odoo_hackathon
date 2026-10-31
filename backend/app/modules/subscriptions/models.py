@@ -241,6 +241,7 @@ class Subscription(Base):
     # Composite Index for high-performance billing queries [PDF 5.11, 7.2]
     __table_args__ = (
         Index("idx_subscriptions_status_billing_date", "status", "next_billing_date"),
+        Index("idx_subscriptions_customer_id", "customer_id"),
         Index("idx_subscriptions_customer_status", "customer_id", "status"),
         {"extend_existing": True},
     )
