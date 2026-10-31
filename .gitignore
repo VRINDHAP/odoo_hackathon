@@ -1,8 +1,23 @@
+# ==============================================================================
 # Database & Local Credentials (Sooraj)
+# ==============================================================================
 database/.env
 database/pgbouncer/userlist.txt
+postgres_data/
+pgdata/
+database/pgdata/
+database/postgres_data/
+*.dump
+*.sql.gz
+*.sql.tar
+*.bak
+backups/
+database/backups/
+dump.rdb
 
+# ==============================================================================
 # Python & Backend (Nandana & Vrindha)
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,31 +25,68 @@ __pycache__/
 .Python
 backend/venv/
 backend/.packages/
+venv/
+.venv/
+env/
 *.db
 *.sqlite3
 backend/brightloop.db
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
+celerybeat-schedule
+celerybeat.pid
+storage/pdfs/
+*.pdf
 
+# ==============================================================================
 # Node & Frontend (Surya)
+# ==============================================================================
 node_modules/
 frontend/dist/
 frontend/build/
+dist/
+build/
 .npm
 *.tsbuildinfo
+.vite/
+.eslintcache
 
-# Environment & IDE
+# ==============================================================================
+# Environment & Secrets
+# ==============================================================================
 .env
+.env.*
+*.env
+!.env.example
+!*.env.example
 .env.local
 .env.*.local
-.vscode/
-.idea/
-*.swp
-*.swo
+*.pem
+*.key
+*.cert
 
-# Logs
+# ==============================================================================
+# Logs & Temporary Files
+# ==============================================================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.pid
+*.seed
+
+# ==============================================================================
+# OS & IDEs
+# ==============================================================================
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,24 @@
+# Local environment variables & secrets
+.env
+.env.*
+!.env.example
+pgbouncer/userlist.txt
+
+# Database volume data
+postgres_data/
+pgdata/
+data/
+
+# Dumps and backups
+*.dump
+*.sql.gz
+*.sql.tar
+*.bak
+backups/
+
+# Redis dumps
+dump.rdb
+
+# Logs
+logs/
+*.log
