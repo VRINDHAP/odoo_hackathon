@@ -37,13 +37,10 @@ from app.core.db import Base
 
 try:
     from app.modules.subscriptions.models import Subscription  # noqa: F401
+    from app.modules.catalog.models import Product  # noqa: F401
+    from app.modules.invoices.models import Invoice  # noqa: F401
 except ImportError:
     pass
-
-# Ensure referenced foreign tables exist in Base.metadata for SQLite in-memory testing
-for _tbl in ("products", "invoices"):
-    if _tbl not in Base.metadata.tables:
-        Table(_tbl, Base.metadata, Column("id", String(36), primary_key=True), extend_existing=True)
 
 
 class DiscountType(str, enum.Enum):
