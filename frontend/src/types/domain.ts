@@ -315,6 +315,29 @@ export interface NotificationItem {
   read: boolean;
 }
 
+export type AgingBucketLabel = '0-30 days' | '31-60 days' | '61-90 days' | '90+ days';
+
+export interface AgingBucketSummary {
+  bucket: AgingBucketLabel;
+  count: number;
+  amount: string;
+}
+
+export interface OutstandingReportResponse {
+  currency: string;
+  total_outstanding: string;
+  outstanding_count: number;
+  items: Invoice[];
+}
+
+export interface OverdueReportResponse {
+  currency: string;
+  total_overdue: string;
+  overdue_count: number;
+  aging_buckets: AgingBucketSummary[];
+  items: Invoice[];
+}
+
 export interface DashboardSummary {
   currency: string;
   active_subscriptions: number;
@@ -330,6 +353,6 @@ export interface DashboardSummary {
   closed_subscriptions_count: number;
   payments_by_method: Array<{ method: PaymentMethod; amount: string; count: number }>;
   revenue_trend: Array<{ month: string; invoiced: number; collected: number }>;
-  aging_buckets: Array<{ bucket: '0-30 days' | '31-60 days' | '61-90 days' | '90+ days'; count: number; amount: string }>;
+  aging_buckets: AgingBucketSummary[];
 }
 

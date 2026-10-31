@@ -136,19 +136,19 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 5: Payments (Recording, Overdue Logic, Reminders) [PDF 17]
 
-- [ ] **FE-5.1**: Build Payments Register table with filters [PDF 5.9, 8, 10, 12].
+- [x] **FE-5.1**: Build Payments Register table with filters [PDF 5.9, 8, 10, 12].
   - **Input**: `GET /payments?format=csv`.
   - **Expected Output**: Searchable table displaying payment date, invoice number, method, amount, reference, and reversal tags.
   - **Acceptance Test**: Reversals render in distinct styling with negative amounts; CSV export button downloads file.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-5.2**: Build Record Payment slide-over drawer with overpayment validation [PDF 5.9, 7.4, 8, 12].
+- [x] **FE-5.2**: Build Record Payment slide-over drawer with overpayment validation [PDF 5.9, 7.4, 8, 12].
   - **Input**: `POST /invoices/{id}/payments`, `Idempotency-Key` header.
   - **Expected Output**: Payment entry drawer with payment method dropdown (`card`, `upi`, `bank_transfer`, `cash`, `cheque`, `other`), amount validation against invoice balance.
   - **Acceptance Test**: Entering amount > balance is rejected with validation message; submit button disables during request to prevent duplicates.
   - **Dependencies**: FE-4.2.
 
-- [ ] **FE-5.3**: Build Outstanding and Overdue screen with aging buckets and reminder trigger [PDF 7.5, 10, 12].
+- [x] **FE-5.3**: Build Outstanding and Overdue screen with aging buckets and reminder trigger [PDF 7.5, 10, 12].
   - **Input**: `GET /reports/outstanding`, `GET /reports/overdue`.
   - **Expected Output**: View displaying aging buckets (`0-30`, `31-60`, `61-90`, `90+`) and overdue table with one-click "Send Reminder" button.
   - **Acceptance Test**: Clicking "Send Reminder" triggers notification dispatch and toasts success.

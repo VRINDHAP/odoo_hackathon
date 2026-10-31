@@ -7,6 +7,8 @@
    ========================================================================== */
 
 import type {
+  AgingBucketLabel,
+  AgingBucketSummary,
   ApiErrorPayload,
   AuditLogEntry,
   AuthResponse,
@@ -17,6 +19,8 @@ import type {
   DiscountRule,
   Invoice,
   NotificationItem,
+  OutstandingReportResponse,
+  OverdueReportResponse,
   PaginatedResponse,
   PaymentMethod,
   PaymentRecord,
@@ -30,7 +34,7 @@ import type {
   TaxRule,
 } from '../types/domain';
 import { tokenStore } from './tokenStore';
-import { isInvoiceOverdue, todayIsoDate } from '../utils/dates';
+import { daysOverdue, isInvoiceOverdue, todayIsoDate } from '../utils/dates';
 import { normalizeToMonthlyMrr, parseMoney, roundHalfUp, toFixedMoney } from '../utils/money';
 import { evaluatePasswordStrength, isValidEmail, normalizeEmail } from '../utils/validation';
 
@@ -2055,6 +2059,16 @@ export async function handleMockRequest(
       if (inv.discount_name) inv.discount_released = true;
     } else if (action === 'send' || action === 'remind') {
       inv.sent_at = new Date().toISOString();
+      if (action === 'remind') {
+        mockDb.notifications.unshift({
+          id: `notif-${Date.now()}`,
+          created_at: inv.sent_at,
+          title: `Dunning Reminder Dispatched — ${inv.number}`,
+          message: `Overdue payment reminder sent to ${inv.customer_name} for ${inv.currency} ${inv.balance}.`,
+          type: 'warning',
+          read: false,
+        });
+      }
     }
 
     mockDb.recordAudit(actor, 'Invoice', inv.number, `invoice.${action}`, before, { status: inv.status, sent_at: inv.sent_at });
@@ -2172,20 +2186,29 @@ export async function handleMockRequest(
   if (path === '/payments' && upperMethod === 'GET') {
     const methodFilter = query.get('method') ?? '';
     const search = (query.get('search') ?? '').toLowerCase();
+    const fromDate = query.get('from') ?? '';
+    const toDate = query.get('to') ?? '';
+    const reversalFilter = query.get('reversal') ?? '';
+
     const filtered = mockDb.payments.filter((p) => {
       if (methodFilter && p.method !== methodFilter) return false;
+      if (reversalFilter === 'true' && !p.is_reversal) return false;
+      if (reversalFilter === 'false' && p.is_reversal) return false;
+      const payDay = p.payment_date.slice(0, 10);
+      if (fromDate && payDay < fromDate) return false;
+      if (toDate && payDay > toDate) return false;
       if (search) {
-        const hay = `${p.invoice_number} ${p.customer_name} ${p.reference}`.toLowerCase();
+        const hay = `${p.invoice_number} ${p.customer_name} ${p.reference} ${p.reversal_reason ?? ''}`.toLowerCase();
         if (!hay.includes(search)) return false;
       }
       return true;
     });
     if (query.get('format') === 'csv') {
       const csvRows = [
-        'Payment Date,Invoice,Customer,Method,Amount,Currency,Reference,Reversal',
+        'Payment Date,Invoice,Customer,Method,Amount,Currency,Reference,Reversal,Reversal Reason,Note',
         ...filtered.map(
           (p) =>
-            `"${p.payment_date}","${p.invoice_number}","${p.customer_name}","${p.method}","${p.amount}","${p.currency}","${p.reference}","${p.is_reversal}"`
+            `"${p.payment_date}","${p.invoice_number}","${p.customer_name}","${p.method}","${p.amount}","${p.currency}","${p.reference}","${p.is_reversal}","${p.reversal_reason ?? ''}","${p.note}"`
         ),
       ].join('\n');
       return { status: 200, blob: new Blob([csvRows], { type: 'text/csv;charset=utf-8;' }) };
@@ -2193,7 +2216,106 @@ export async function handleMockRequest(
     return { status: 200, data: paginate(filtered, query) };
   }
 
+  const payReverseMatch = path.match(/^\/payments\/([^/]+)\/reverse$/);
+  if (payReverseMatch && upperMethod === 'POST') {
+    const original = mockDb.payments.find((p) => p.id === payReverseMatch[1]);
+    if (!original) return err(404, 'NOT_FOUND', 'Payment record not found.');
+    if (original.is_reversal || parseMoney(original.amount) <= 0) {
+      return err(409, 'CONFLICT', 'Reversal entries cannot be reversed again.');
+    }
+    const reason = String(payload.reversal_reason ?? '').trim();
+    if (!reason) {
+      return err(422, 'VALIDATION_ERROR', 'Reversal reason is mandatory for audit compliance.', [
+        { field: 'reversal_reason', message: 'Provide a clear reason for reversing this payment.' },
+      ]);
+    }
+
+    const absAmt = parseMoney(original.amount);
+    const reversal: PaymentRecord = {
+      id: `pay-rev-${Date.now()}`,
+      invoice_id: original.invoice_id,
+      invoice_number: original.invoice_number,
+      customer_id: original.customer_id,
+      customer_name: original.customer_name,
+      method: original.method,
+      amount: toFixedMoney(-absAmt),
+      currency: original.currency,
+      payment_date: new Date().toISOString(),
+      reference: `REV-${original.reference}`,
+      note: `Append-only reversal of ${original.reference}.`,
+      is_reversal: true,
+      reversal_reason: reason,
+    };
+    mockDb.payments.unshift(reversal);
+
+    const inv = mockDb.invoices.find((i) => i.id === original.invoice_id);
+    if (inv) {
+      const nextPaid = Math.max(0, roundHalfUp(parseMoney(inv.amount_paid) - absAmt));
+      const nextBal = Math.max(0, roundHalfUp(parseMoney(inv.total) - nextPaid));
+      inv.amount_paid = toFixedMoney(nextPaid);
+      inv.balance = toFixedMoney(nextBal);
+      if (nextBal > 0 && inv.status === 'paid') {
+        inv.status = 'confirmed';
+      }
+    }
+
+    mockDb.recordAudit(actor, 'Payment', reversal.id, 'payment.reversed', { original_payment_id: original.id, amount: original.amount }, { reversal_amount: reversal.amount, reason });
+    return { status: 201, data: reversal };
+  }
+
   // ================= REPORTS & FINANCE DASHBOARD =================
+  const computeDynamicAgingBuckets = (overdueItems: Invoice[]): AgingBucketSummary[] => {
+    const labels: AgingBucketLabel[] = ['0-30 days', '31-60 days', '61-90 days', '90+ days'];
+    const map = new Map<AgingBucketLabel, { count: number; amount: number }>(
+      labels.map((b) => [b, { count: 0, amount: 0 }])
+    );
+    overdueItems.forEach((inv) => {
+      const age = daysOverdue(inv.due_date);
+      const bucket: AgingBucketLabel =
+        age <= 30 ? '0-30 days' : age <= 60 ? '31-60 days' : age <= 90 ? '61-90 days' : '90+ days';
+      const entry = map.get(bucket)!;
+      entry.count += 1;
+      entry.amount = roundHalfUp(entry.amount + parseMoney(inv.balance));
+    });
+    return labels.map((bucket) => {
+      const entry = map.get(bucket)!;
+      return { bucket, count: entry.count, amount: toFixedMoney(entry.amount) };
+    });
+  };
+
+  if (path === '/reports/outstanding' && upperMethod === 'GET') {
+    const outstandingItems = mockDb.invoices.filter(
+      (i) => i.status === 'confirmed' && parseMoney(i.balance) > 0
+    );
+    const totalOut = outstandingItems.reduce(
+      (acc, i) => roundHalfUp(acc + parseMoney(i.balance)),
+      0
+    );
+    const res: OutstandingReportResponse = {
+      currency: mockDb.settings.currency,
+      total_outstanding: toFixedMoney(totalOut),
+      outstanding_count: outstandingItems.length,
+      items: outstandingItems,
+    };
+    return { status: 200, data: res };
+  }
+
+  if (path === '/reports/overdue' && upperMethod === 'GET') {
+    const overdueItems = mockDb.invoices.filter((i) => isInvoiceOverdue(i));
+    const totalOver = overdueItems.reduce(
+      (acc, i) => roundHalfUp(acc + parseMoney(i.balance)),
+      0
+    );
+    const res: OverdueReportResponse = {
+      currency: mockDb.settings.currency,
+      total_overdue: toFixedMoney(totalOver),
+      overdue_count: overdueItems.length,
+      aging_buckets: computeDynamicAgingBuckets(overdueItems),
+      items: overdueItems,
+    };
+    return { status: 200, data: res };
+  }
+
   if (path === '/reports/summary' && upperMethod === 'GET') {
     const activeSubs = mockDb.subscriptions.filter((s) => s.status === 'active');
     const pausedSubs = mockDb.subscriptions.filter((s) => s.status === 'paused');
@@ -2241,12 +2363,7 @@ export async function handleMockRequest(
         { month: 'Sep', invoiced: 158900, collected: 151200 },
         { month: 'Oct', invoiced: 174600, collected: 148900 },
       ],
-      aging_buckets: [
-        { bucket: '0-30 days', count: 1, amount: '42988.40' },
-        { bucket: '31-60 days', count: 0, amount: '0.00' },
-        { bucket: '61-90 days', count: 1, amount: '38350.00' },
-        { bucket: '90+ days', count: 0, amount: '0.00' },
-      ],
+      aging_buckets: computeDynamicAgingBuckets(overdueList),
     };
     return { status: 200, data: summary };
   }

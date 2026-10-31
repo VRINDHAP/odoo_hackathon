@@ -78,6 +78,16 @@ const InvoiceDetailPage = lazy(() =>
     default: m.InvoiceDetailPage,
   }))
 );
+const PaymentsPage = lazy(() =>
+  import('../features/payments/PaymentsPage').then((m) => ({
+    default: m.PaymentsPage,
+  }))
+);
+const OverdueAgingPage = lazy(() =>
+  import('../features/payments/OverdueAgingPage').then((m) => ({
+    default: m.OverdueAgingPage,
+  }))
+);
 
 const RootRedirect: React.FC = () => {
   const { user, isHydrating } = useAuth();
@@ -142,28 +152,8 @@ export const AppRoutes: React.FC = () => (
         />
         <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
-        <Route
-          path="/payments"
-          element={
-            <ModuleStageCard
-              partNumber={5}
-              eyebrow="Cash Settlement"
-              title="Payments Register"
-              summary="Append-only payment ledger, idempotent payment drawer, reversals, and CSV exports."
-            />
-          }
-        />
-        <Route
-          path="/overdue"
-          element={
-            <ModuleStageCard
-              partNumber={5}
-              eyebrow="Collections & Dunning"
-              title="Outstanding & Overdue Aging"
-              summary="0-30, 31-60, 61-90, and 90+ day aging buckets with one-click dunning reminders."
-            />
-          }
-        />
+        <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/overdue" element={<OverdueAgingPage />} />
         <Route
           path="/reports"
           element={
