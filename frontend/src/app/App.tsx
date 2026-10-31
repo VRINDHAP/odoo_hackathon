@@ -67,6 +67,17 @@ const SubscriptionDetailPage = lazy(() =>
     default: m.SubscriptionDetailPage,
   }))
 );
+const DiscountsPage = lazy(() =>
+  import('../features/discounts/DiscountsPage').then((m) => ({ default: m.DiscountsPage }))
+);
+const InvoicesPage = lazy(() =>
+  import('../features/invoices/InvoicesPage').then((m) => ({ default: m.InvoicesPage }))
+);
+const InvoiceDetailPage = lazy(() =>
+  import('../features/invoices/InvoiceDetailPage').then((m) => ({
+    default: m.InvoiceDetailPage,
+  }))
+);
 
 const RootRedirect: React.FC = () => {
   const { user, isHydrating } = useAuth();
@@ -125,26 +136,12 @@ export const AppRoutes: React.FC = () => (
           path="/discounts"
           element={
             <RouteGuard allowedRoles={['admin']}>
-              <ModuleStageCard
-                partNumber={4}
-                eyebrow="Promotions · Admin Only"
-                title="Discount Rules & Redemptions"
-                summary="Percentage and fixed discount rules with usage limits and live redemption counters."
-              />
+              <DiscountsPage />
             </RouteGuard>
           }
         />
-        <Route
-          path="/invoices"
-          element={
-            <ModuleStageCard
-              partNumber={4}
-              eyebrow="Accounts Receivable"
-              title="Invoices & PDF Documents"
-              summary="Confirm, send, print, and download native PDF invoices with automatic overdue detection."
-            />
-          }
-        />
+        <Route path="/invoices" element={<InvoicesPage />} />
+        <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
         <Route
           path="/payments"
           element={

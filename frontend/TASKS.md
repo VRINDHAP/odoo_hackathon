@@ -108,25 +108,25 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 4: Billing (Invoices, Discounts, Billing Job UI) [PDF 17]
 
-- [ ] **FE-4.1**: Build Discount Rules management screen (Admin only) [PDF 2, 5.8, 8, 12].
+- [x] **FE-4.1**: Build Discount Rules management screen (Admin only) [PDF 2, 5.8, 8, 12].
   - **Input**: `GET/POST/PATCH /discounts`, `GET /discounts/{id}/usage`.
   - **Expected Output**: Discount rules table with usage count vs usage limit indicator, type (percent/fixed), and date range.
   - **Acceptance Test**: Form validates min purchase amount and quantity; usage tracker reflects redemptions.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-4.2**: Build Invoices list and detail screen with status flow [PDF 5.9, 6.2, 12].
+- [x] **FE-4.2**: Build Invoices list and detail screen with status flow [PDF 5.9, 6.2, 12].
   - **Input**: `GET /invoices`, `GET /invoices/{id}`.
   - **Expected Output**: Invoices table with balance and overdue badge; detail view showing line items, tax breakdown, and status stepper (`Draft -> Confirmed -> Paid`).
   - **Acceptance Test**: Cancel button hidden when status is `Paid`; overdue badge appears when `confirmed`, `balance > 0`, and `due_date < today`.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-4.3**: Implement Invoice Actions (Confirm, Cancel, Send, Print, PDF Download) [PDF 6.2, 8, 12].
+- [x] **FE-4.3**: Implement Invoice Actions (Confirm, Cancel, Send, Print, PDF Download) [PDF 6.2, 8, 12].
   - **Input**: `POST /invoices/{id}/confirm`, `/cancel`, `/send`, `GET /invoices/{id}/pdf`.
   - **Expected Output**: Interactive buttons for each invoice lifecycle action; PDF viewer/download trigger.
   - **Acceptance Test**: Sending invoice records `sent_at` timestamp; PDF download streams file or polls S3 URL.
   - **Dependencies**: FE-4.2.
 
-- [ ] **FE-4.4**: Build Manual Billing Run trigger and observability modal [PDF 5.10, 7.2, 8].
+- [x] **FE-4.4**: Build Manual Billing Run trigger and observability modal [PDF 5.10, 7.2, 8].
   - **Input**: `POST /billing/run` (Admin only).
   - **Expected Output**: Admin button "Run Billing Now" with modal displaying `created_count`, `skipped_count`, `failed_count`, `error_summary`.
   - **Acceptance Test**: Dispatching billing run updates modal with execution summary upon completion.
