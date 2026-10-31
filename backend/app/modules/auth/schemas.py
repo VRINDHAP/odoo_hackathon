@@ -79,3 +79,32 @@ class AuthResponse(BaseModel):
 class MessageResponse(BaseModel):
     """Generic message response."""
     message: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Forgot password request [PDF 8, 9]."""
+    email: str = Field(..., description="Registered account email")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_format(cls, v: str) -> str:
+        cleaned = v.strip().lower()
+        if not EMAIL_REGEX.match(cleaned):
+            raise ValueError("Invalid email address format.")
+        return cleaned
+
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request [PDF 8, 9]."""
+    token: str = Field(..., description="Plain password reset token received via email")
+    new_password: str = Field(..., description="New password meeting complexity policy")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        if not PASSWORD_REGEX.match(v):
+            raise ValueError(
+                "Password must be longer than 8 characters, contain at least one uppercase letter, "
+                "one lowercase letter, and one special character."
+            )
+        return v

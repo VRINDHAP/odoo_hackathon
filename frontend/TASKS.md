@@ -52,19 +52,19 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 2: Catalog (Products, Variants, Plans, Taxes) [PDF 17]
 
-- [ ] **FE-2.1**: Build Products and Variants management screens with cost vs sales margin display [PDF 2, 5.3, 12].
+- [x] **FE-2.1**: Build Products and Variants management screens with cost vs sales margin display [PDF 2, 5.3, 12].
   - **Input**: `GET/POST /products`, `GET/PATCH/DELETE /products/{id}`, `POST /products/{id}/variants`.
   - **Expected Output**: Product table with type chips, variant drawer, and margin calculation (`sales - cost`) visible only to Admin.
   - **Acceptance Test**: Staff cannot view cost margin or edit products; Admin can add variants with `extra_price`.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-2.2**: Build Plans configuration screen with behavior toggle flags [PDF 2, 5.4, 12].
+- [x] **FE-2.2**: Build Plans configuration screen with behavior toggle flags [PDF 2, 5.4, 12].
   - **Input**: `GET/POST /plans`, `PATCH /plans/{id}`.
   - **Expected Output**: Plan cards showing price, billing period (`daily`, `weekly`, `monthly`, `yearly`), min quantity, and flags (`auto_close`, `closable`, `pausable`, `renewable`, `is_active`).
   - **Acceptance Test**: Saving toggles persists to backend; Staff role sees read-only plan views.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-2.3**: Build Tax Rules configuration screen [PDF 2, 5.7, 12].
+- [x] **FE-2.3**: Build Tax Rules configuration screen [PDF 2, 5.7, 12].
   - **Input**: `GET/POST/PATCH /taxes`.
   - **Expected Output**: Tax table listing rules, percentage/fixed rate, inclusive boolean badge, and applicability tags (`all`, `product`, `category`).
   - **Acceptance Test**: Tax rate changes persist; inclusive vs exclusive badges render distinctly.
