@@ -44,6 +44,29 @@ const PlansPage = lazy(() =>
 const TaxesPage = lazy(() =>
   import('../features/taxes/TaxesPage').then((m) => ({ default: m.TaxesPage }))
 );
+const CustomersPage = lazy(() =>
+  import('../features/customers/CustomersPage').then((m) => ({ default: m.CustomersPage }))
+);
+const CustomerDetailPage = lazy(() =>
+  import('../features/customers/CustomerDetailPage').then((m) => ({
+    default: m.CustomerDetailPage,
+  }))
+);
+const QuotationTemplatesPage = lazy(() =>
+  import('../features/templates/QuotationTemplatesPage').then((m) => ({
+    default: m.QuotationTemplatesPage,
+  }))
+);
+const SubscriptionsPage = lazy(() =>
+  import('../features/subscriptions/SubscriptionsPage').then((m) => ({
+    default: m.SubscriptionsPage,
+  }))
+);
+const SubscriptionDetailPage = lazy(() =>
+  import('../features/subscriptions/SubscriptionDetailPage').then((m) => ({
+    default: m.SubscriptionDetailPage,
+  }))
+);
 
 const RootRedirect: React.FC = () => {
   const { user, isHydrating } = useAuth();
@@ -93,39 +116,11 @@ export const AppRoutes: React.FC = () => (
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/plans" element={<PlansPage />} />
         <Route path="/taxes" element={<TaxesPage />} />
-        <Route
-          path="/customers"
-          element={
-            <ModuleStageCard
-              partNumber={3}
-              eyebrow="CRM & Billing Profiles"
-              title="Customer Directory"
-              summary="Customer accounts, GST/Tax IDs, billing addresses, and linked subscriptions/invoices."
-            />
-          }
-        />
-        <Route
-          path="/quotation-templates"
-          element={
-            <ModuleStageCard
-              partNumber={3}
-              eyebrow="Rapid Sales"
-              title="Quotation Templates"
-              summary="Reusable product bundles with one-click draft quotation creation."
-            />
-          }
-        />
-        <Route
-          path="/subscriptions"
-          element={
-            <ModuleStageCard
-              partNumber={3}
-              eyebrow="Recurring Contracts"
-              title="Subscriptions Lifecycle"
-              summary="Draft -> Quotation -> Confirmed -> Active -> Closed stepper with live Draft line pricing."
-            />
-          }
-        />
+        <Route path="/customers" element={<CustomersPage />} />
+        <Route path="/customers/:id" element={<CustomerDetailPage />} />
+        <Route path="/quotation-templates" element={<QuotationTemplatesPage />} />
+        <Route path="/subscriptions" element={<SubscriptionsPage />} />
+        <Route path="/subscriptions/:id" element={<SubscriptionDetailPage />} />
         <Route
           path="/discounts"
           element={

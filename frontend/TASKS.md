@@ -74,31 +74,31 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 3: Sales (Customers, Quotation Templates, Subscriptions) [PDF 17]
 
-- [ ] **FE-3.1**: Build Customer Directory and Customer Detail screen [PDF 2, 5.2, 12].
+- [x] **FE-3.1**: Build Customer Directory and Customer Detail screen [PDF 2, 5.2, 12].
   - **Input**: `GET/POST /customers`, `GET/PATCH /customers/{id}`.
   - **Expected Output**: Searchable customer list and detail view with tabs for Subscriptions, Invoices, Payments.
   - **Acceptance Test**: Customer detail loads related subscriptions and invoices; inline address edit functions.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-3.2**: Build Quotation Templates builder with one-click quotation generator [PDF 2, 5.5, 8, 12].
+- [x] **FE-3.2**: Build Quotation Templates builder with one-click quotation generator [PDF 2, 5.5, 8, 12].
   - **Input**: `GET/POST /quotation-templates`, `POST /quotation-templates/{id}/create-quotation`.
   - **Expected Output**: Template editor with product line items, validity days, and a "Create Quotation" action button.
   - **Acceptance Test**: Clicking "Create Quotation" dispatches API request and navigates to newly generated subscription draft.
   - **Dependencies**: FE-2.1, FE-3.1.
 
-- [ ] **FE-3.3**: Build Subscriptions list screen with status chips and filter bar [PDF 5.6, 6.1, 12].
+- [x] **FE-3.3**: Build Subscriptions list screen with status chips and filter bar [PDF 5.6, 6.1, 12].
   - **Input**: `GET /subscriptions?status=&customer_id=&from=&to=`.
   - **Expected Output**: Virtualized table with colored status chips (`draft`, `quotation`, `confirmed`, `active`, `paused`, `closed`, `cancelled`).
   - **Acceptance Test**: Filtering by status and customer updates list within 300 ms debounce.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-3.4**: Build Subscription Detail view with lifecycle status stepper and dynamic real-time line editor [PDF 5.6, 6.1, 7.1, 12].
+- [x] **FE-3.4**: Build Subscription Detail view with lifecycle status stepper and dynamic real-time line editor [PDF 5.6, 6.1, 7.1, 12].
   - **Input**: `GET /subscriptions/{id}`, `PATCH /subscriptions/{id}`.
   - **Expected Output**: Status stepper (`Draft -> Quotation -> Confirmed -> Active -> Closed`); real-time line editor dynamically recalculating line subtotal, estimated taxes, and document totals live as quantity/price change.
   - **Acceptance Test**: In Draft mode, totals recompute dynamically on keystroke with rounded 2-decimal sums; non-draft fields lock; negative values blocked inline.
   - **Dependencies**: FE-3.3.
 
-- [ ] **FE-3.5**: Implement Subscription Transition actions gated by plan behavior flags [PDF 5.4, 6.1, 8].
+- [x] **FE-3.5**: Implement Subscription Transition actions gated by plan behavior flags [PDF 5.4, 6.1, 8].
   - **Input**: `POST /subscriptions/{id}/transition`, `/pause`, `/resume`, `/close`, `/renew`.
   - **Expected Output**: Action buttons that conditionally render based on `plan.closable`, `plan.pausable`, and `plan.renewable`.
   - **Acceptance Test**: Pause button hidden if `plan.pausable == false`; Close button prompts for `close_reason`; 409 responses show error toast.
