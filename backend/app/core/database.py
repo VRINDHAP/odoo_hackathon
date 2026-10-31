@@ -27,6 +27,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from app.modules.customers.models import Customer
+except ImportError:
+    pass
+
 # Subscriptions Engine
 from app.modules.subscriptions.models import Subscription, SubscriptionLine, SubscriptionStatus
 

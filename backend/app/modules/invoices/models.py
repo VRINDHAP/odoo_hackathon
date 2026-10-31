@@ -34,13 +34,11 @@ from app.core.db import Base
 
 try:
     from app.modules.subscriptions.models import Subscription, SubscriptionLine  # noqa: F401
+    from app.modules.customers.models import Customer  # noqa: F401
+    from app.modules.catalog.models import Product  # noqa: F401
+    from app.modules.taxes.models import Tax  # noqa: F401
 except ImportError:
     pass
-
-# Ensure foreign tables exist in metadata for SQLite in-memory tests
-for _tbl in ("customers", "products", "taxes"):
-    if _tbl not in Base.metadata.tables:
-        Table(_tbl, Base.metadata, Column("id", String(36), primary_key=True), extend_existing=True)
 
 
 class InvoiceStatus(str, enum.Enum):
