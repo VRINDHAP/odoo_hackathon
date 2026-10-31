@@ -1,0 +1,67 @@
+================================================================================
+BRIGHTLOOP FRONTEND — HOW TO RUN ALL COMMANDS
+Subscription Management System (Ramp-Inspired Design System)
+================================================================================
+
+1. PREREQUISITES
+--------------------------------------------------------------------------------
+- Node.js v20+ (verified on Node v23.7.0 / npm v11.7.0)
+- Working directory: d:\odoo_hackathon\frontend
+
+
+2. INSTALL DEPENDENCIES
+--------------------------------------------------------------------------------
+cd d:\odoo_hackathon\frontend
+npm install
+
+
+3. START DEVELOPMENT SERVER (HOT RELOAD)
+--------------------------------------------------------------------------------
+cd d:\odoo_hackathon\frontend
+npm run dev
+
+- Opens on: http://localhost:5173
+- API Proxy: Automatically forwards /api/v1/* to http://localhost:8000
+- Smart Fallback: Any /api/v1 endpoint not yet mounted on the FastAPI backend
+  automatically falls back to the stateful OpenAPI 3.0 relational mock ledger
+  so all screens, forms, transitions, PDFs, and CSVs work immediately offline.
+
+
+4. TYPE CHECKING, LINTING & UNIT TESTS
+--------------------------------------------------------------------------------
+# Run strict TypeScript compiler check (zero emit)
+npm run typecheck
+
+# Run ESLint with zero-warnings enforcement
+npm run lint
+
+# Run Vitest unit & integration test suite once
+npm run test
+
+# Run Vitest in interactive watch mode during development
+npm run test:watch
+
+
+5. PRODUCTION BUILD & LOCAL PREVIEW
+--------------------------------------------------------------------------------
+# Compile TypeScript and build optimized code-split bundle into dist/
+npm run build
+
+# Serve the production dist/ bundle locally to verify Lighthouse / load speed
+npm run preview
+
+
+6. DEMO RBAC ACCOUNTS (AVAILABLE ON LOGIN SCREEN OR MANUAL ENTRY)
+--------------------------------------------------------------------------------
+- Administrator (Full CRUD, Margins, Discounts, Billing Run, Staff, Audit, Settings):
+  Email:    admin@brightloop.io
+  Password: Admin@2026!
+
+- Internal Staff (Operational Sales/Billing, Read-Only Catalog/Plans/Taxes, No Delete):
+  Email:    nandana@brightloop.io
+  Password: Staff@2026!
+
+- Customer Portal (Isolated /portal/* -> /me/* Subscriptions, Invoices, Pay Now, Profile):
+  Email:    arjun@vervecloud.in
+  Password: Customer@2026!
+================================================================================
