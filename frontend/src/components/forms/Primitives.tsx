@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Check, Circle, X } from 'lucide-react';
 import { evaluatePasswordStrength } from '../../utils/validation';
 
@@ -235,9 +235,28 @@ export const Modal: React.FC<ModalProps> = ({
   maxWidth = 540,
   children,
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="modal-panel" style={{ maxWidth }}>
         <div className="modal-header">
           <div>
@@ -330,9 +349,28 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
   footer,
   children,
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
   return (
-    <div className="drawer-backdrop" role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      className="drawer-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="drawer-panel">
         <div className="modal-header">
           <div>

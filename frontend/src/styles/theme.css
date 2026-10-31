@@ -67,6 +67,11 @@
   --chip-cancelled-bg: #ffe4e6;
   --chip-cancelled-border: #fecdd3;
 
+  --chip-overdue-text: #be123c;
+  --chip-overdue-bg: #ffe4e6;
+  --chip-overdue-border: #fecdd3;
+  --chip-paid-text: #047857;
+
   /* --- SPEC.md §12.4 Base Aliases --- */
   --bg-primary: var(--color-canvas-sand);
   --card-bg: var(--color-canvas);
@@ -277,10 +282,27 @@ textarea {
   font-size: 12px;
 }
 
-.money-cell {
+.money-cell,
+.cell-numeric,
+.col-right {
   text-align: right;
   white-space: nowrap;
-  font-variant-numeric: proportional-nums;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-stat-sm {
+  font-size: 24px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+  color: var(--color-ink);
+}
+
+.type-subhead {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  color: var(--color-ink);
 }
 
 /* --- Ramp Product Tiles & Containers --- */
@@ -316,13 +338,21 @@ textarea {
   color: var(--color-canvas);
 }
 
-.tile-mosaic-2x2 {
+.tile-mosaic-2x2,
+.mosaic-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-lg);
 }
 
-.kpi-mosaic-grid {
+.mosaic-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.kpi-mosaic-grid,
+.mosaic-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md);
@@ -352,6 +382,27 @@ textarea {
 .atmosphere-blaze {
   background-image: var(--background-image-blaze);
   color: var(--color-canvas);
+}
+
+/* Subtle Interior Atmospheric Tints for KPI Tiles (ramp.design.md) */
+.surface-MorningMist {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7fc 100%);
+}
+
+.surface-SolarWarmth {
+  background: linear-gradient(180deg, #ffffff 0%, #fdf9e7 100%);
+}
+
+.surface-TwilightSky {
+  background: linear-gradient(180deg, #ffffff 0%, #eef3fb 100%);
+}
+
+.surface-LavenderHaze {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f5fc 100%);
+}
+
+.surface-MintGlow {
+  background: linear-gradient(180deg, #ffffff 0%, #eefaf4 100%);
 }
 
 /* --- Ramp Buttons --- */
@@ -755,8 +806,57 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* --- Data Tables (Dense Ramp Chrome) --- */
-.table-card {
+/* --- Data Tables & Filter Toolbars (Dense Ramp Chrome) --- */
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.filter-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.breadcrumb-trail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-lh);
+  color: var(--color-ink-mute);
+  min-width: 0;
+}
+
+.breadcrumb-link {
+  color: var(--color-ink-mute);
+  white-space: nowrap;
+}
+
+.breadcrumb-link:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.breadcrumb-current {
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.table-card,
+.data-table-shell {
   background-color: var(--color-canvas);
   border: 1px solid var(--color-hairline);
   border-radius: var(--rounded-lg);
@@ -779,13 +879,15 @@ textarea {
   overflow-x: auto;
 }
 
-.ramp-table {
+.ramp-table,
+.data-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-.ramp-table th {
+.ramp-table th,
+.data-table th {
   padding: 10px 16px;
   font-size: var(--text-micro-size);
   line-height: 18px;
@@ -798,7 +900,8 @@ textarea {
   user-select: none;
 }
 
-.ramp-table td {
+.ramp-table td,
+.data-table td {
   padding: 11px 16px;
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-lh);
@@ -807,15 +910,18 @@ textarea {
   vertical-align: middle;
 }
 
-.ramp-table tbody tr {
+.ramp-table tbody tr,
+.data-table tbody tr {
   transition: background-color 0.1s ease;
 }
 
-.ramp-table tbody tr:hover {
+.ramp-table tbody tr:hover,
+.data-table tbody tr:hover {
   background-color: var(--color-canvas-hover);
 }
 
-.ramp-table tbody tr:last-child td {
+.ramp-table tbody tr:last-child td,
+.data-table tbody tr:last-child td {
   border-bottom: none;
 }
 
@@ -1053,14 +1159,23 @@ textarea {
   display: none;
 }
 
+.desktop-only {
+  display: inline-flex;
+}
+
 @media (max-width: 1200px) {
-  .kpi-mosaic-grid {
+  .kpi-mosaic-grid,
+  .mosaic-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mosaic-grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 991px) {
-  .tile-mosaic-2x2 {
+  .tile-mosaic-2x2,
+  .mosaic-grid-2 {
     grid-template-columns: 1fr;
   }
   .auth-split-layout {
@@ -1073,6 +1188,16 @@ textarea {
     border-left: none;
     padding: 28px 20px;
   }
+  .portal-navbar {
+    height: auto;
+    min-height: var(--nav-height);
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .portal-nav-links {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1081,27 +1206,65 @@ textarea {
     left: 0;
     top: 0;
     bottom: 0;
-    z-index: 50;
+    z-index: 55;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
+    box-shadow: var(--shadow-modal);
   }
   .app-sidebar-open {
     transform: translateX(0);
   }
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(33, 33, 33, 0.34);
+    z-index: 50;
+  }
   .mobile-only {
     display: inline-flex;
   }
+  .desktop-only {
+    display: none !important;
+  }
   .app-content {
     padding: 18px 16px;
+    gap: var(--space-lg);
+  }
+  .portal-content {
+    padding: 20px 16px 48px;
+    gap: var(--space-lg);
+  }
+  .product-tile {
+    padding: 20px 18px;
+  }
+  .product-tile-compact {
+    padding: 16px;
   }
   .app-topbar {
-    padding: 0 16px;
+    padding: 0 14px;
+    gap: 8px;
   }
-  .kpi-mosaic-grid {
+  .kpi-mosaic-grid,
+  .mosaic-grid-4,
+  .mosaic-grid-3 {
     grid-template-columns: 1fr;
   }
   .diff-grid {
     grid-template-columns: 1fr;
+  }
+  .filter-toolbar,
+  .filter-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .modal-backdrop {
+    padding: 12px;
+  }
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 16px;
   }
   .type-display-xl {
     font-size: 32px;
@@ -1110,6 +1273,10 @@ textarea {
   .type-display-lg {
     font-size: 28px;
     line-height: 32px;
+  }
+  .type-display-md {
+    font-size: 22px;
+    line-height: 26px;
   }
 }
 
