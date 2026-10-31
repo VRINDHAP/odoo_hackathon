@@ -139,6 +139,7 @@ class MockDatabase {
       variants: [
         { id: 'var-01', product_id: 'prod-01', attribute: 'Edition', value: 'Enterprise SSO', extra_price: '1500.00' },
         { id: 'var-02', product_id: 'prod-01', attribute: 'Region', value: 'Dedicated India DC', extra_price: '800.00' },
+        { id: 'var-odoo', product_id: 'prod-01', attribute: 'Brand', value: 'Odoo', extra_price: '560.00' },
       ],
     },
     {
@@ -173,6 +174,17 @@ class MockDatabase {
       cost_price: '4100.00',
       tax_id: 'tax-gst-18',
       notes: 'Hardware reader leased with recurring warranty.',
+      is_active: true,
+      variants: [],
+    },
+    {
+      id: 'prod-05',
+      name: 'AI Dunning & Multi-Currency Add-on',
+      type: 'addon',
+      sales_price: '1850.00',
+      cost_price: '420.00',
+      tax_id: 'tax-gst-18',
+      notes: 'Self-service billing add-on customers can switch on and off anytime.',
       is_active: true,
       variants: [],
     },
@@ -1201,6 +1213,107 @@ function computeSubscriptionTotals(lines: SubscriptionLine[], discountTotalStr =
   };
 }
 
+function evaluateBestAutoDiscount(
+  lines: SubscriptionLine[],
+  subtotalNum: number,
+  couponCode?: string | null,
+  referenceDate?: string
+): { rule: DiscountRule | null; amount: number } {
+  const refDate = referenceDate ?? todayIsoDate();
+  const totalQty = lines.reduce((sum, l) => sum + Math.max(0, l.quantity), 0);
+  let bestRule: DiscountRule | null = null;
+  let bestAmount = 0;
+
+  for (const rule of mockDb.discounts) {
+    if (!rule.is_active) continue;
+    if (rule.start_date && refDate < rule.start_date) continue;
+    if (rule.end_date && refDate > rule.end_date) continue;
+    if (rule.usage_limit !== null && rule.usage_count >= rule.usage_limit) continue;
+    if (rule.code && couponCode && rule.code.toUpperCase() !== couponCode.trim().toUpperCase()) {
+      continue;
+    }
+    if (totalQty < rule.min_quantity) continue;
+
+    let eligibleBase = subtotalNum;
+    if (rule.scope === 'product') {
+      const matchingLines = lines.filter((ln) => rule.product_ids.includes(ln.product_id));
+      if (matchingLines.length === 0) continue;
+      eligibleBase = matchingLines.reduce(
+        (acc, ln) => roundHalfUp(acc + parseMoney(ln.line_subtotal)),
+        0
+      );
+    }
+    if (eligibleBase < parseMoney(rule.min_purchase_amount)) continue;
+
+    const candidate =
+      rule.type === 'percent'
+        ? roundHalfUp((eligibleBase * parseMoney(rule.value)) / 100)
+        : Math.min(eligibleBase, parseMoney(rule.value));
+
+    if (candidate > bestAmount) {
+      bestAmount = candidate;
+      bestRule = rule;
+    }
+  }
+
+  return { rule: bestRule, amount: bestAmount };
+}
+
+function buildInvoiceFromSubscription(
+  sub: Subscription,
+  initialStatus: Invoice['status'] = 'confirmed'
+): Invoice {
+  const baseTotals = computeSubscriptionTotals(sub.lines, '0.00');
+  const subtotalNum = parseMoney(baseTotals.subtotal);
+  const autoDisc = evaluateBestAutoDiscount(baseTotals.lines, subtotalNum, sub.coupon_code);
+
+  if (autoDisc.rule) {
+    autoDisc.rule.usage_count += 1;
+  }
+
+  const finalTotals = computeSubscriptionTotals(
+    baseTotals.lines,
+    toFixedMoney(autoDisc.amount)
+  );
+  const issueDate = todayIsoDate();
+  const termsDays = sub.payment_terms === 'Immediate' ? 0 : sub.payment_terms === 'Net 30' ? 30 : 15;
+  const dueDate = new Date(Date.now() + termsDays * 86400000).toISOString().slice(0, 10);
+  const nextNum = `${mockDb.settings.invoice_prefix}${String(422 + mockDb.invoices.length).padStart(6, '0')}`;
+
+  return {
+    id: `inv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    number: nextNum,
+    subscription_id: sub.id,
+    subscription_number: sub.number,
+    customer_id: sub.customer_id,
+    customer_name: sub.customer_name,
+    status: initialStatus,
+    issue_date: issueDate,
+    due_date: dueDate,
+    sent_at: initialStatus === 'confirmed' ? new Date().toISOString() : null,
+    currency: sub.currency,
+    discount_name: autoDisc.rule?.name ?? null,
+    subtotal: finalTotals.subtotal,
+    discount_total: finalTotals.discount_total,
+    tax_total: finalTotals.tax_total,
+    total: finalTotals.total,
+    amount_paid: '0.00',
+    balance: finalTotals.total,
+    pdf_ready: true,
+    lines: finalTotals.lines.map((l, idx) => ({
+      id: `il-${Date.now()}-${idx}`,
+      description: `${l.product_name}${l.variant_label ? ` (${l.variant_label})` : ''} × ${l.quantity}`,
+      quantity: l.quantity,
+      unit_price: l.unit_price,
+      tax_rate: l.tax_rate,
+      tax_inclusive: l.tax_inclusive,
+      line_subtotal: l.line_subtotal,
+      line_tax: l.line_tax,
+      line_total: l.line_total,
+    })),
+  };
+}
+
 function generateInvoicePdfBlob(invoice: Invoice): Blob {
   // Valid minimal single-page PDF binary stream rendered locally (zero external cloud PDF widgets!)
   const linesText = [
@@ -1870,8 +1983,8 @@ export async function handleMockRequest(
         status: 'draft',
         payment_terms: (payload.payment_terms as Subscription['payment_terms']) ?? 'Net 15',
         anchor_day: new Date().getDate(),
-        start_date: null,
-        expiry_date: null,
+        start_date: payload.start_date ? String(payload.start_date) : null,
+        expiry_date: payload.expiry_date ? String(payload.expiry_date) : null,
         next_billing_date: null,
         last_billed_through: null,
         quote_valid_until: String(payload.quote_valid_until ?? new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10)),
@@ -1981,7 +2094,7 @@ export async function handleMockRequest(
         sub.quote_valid_until = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10);
       }
       if (target === 'active') {
-        sub.start_date = todayIsoDate();
+        sub.start_date = sub.start_date ?? todayIsoDate();
         sub.next_billing_date = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
       }
       sub.activities.unshift({
@@ -2021,6 +2134,46 @@ export async function handleMockRequest(
   }
 
   // ================= INVOICES & BILLING RUN =================
+  if (path === '/invoices' && upperMethod === 'POST') {
+    const subId = String(payload.subscription_id ?? '');
+    const sub = mockDb.subscriptions.find((s) => s.id === subId);
+    if (!sub) return err(404, 'NOT_FOUND', 'Subscription not found for invoice creation.');
+    if (sub.status !== 'active' && sub.status !== 'confirmed') {
+      return err(409, 'CONFLICT', 'Invoices can only be generated from Confirmed or Active subscriptions.');
+    }
+    const today = todayIsoDate();
+    const duplicateCycle = mockDb.invoices.find(
+      (i) => i.subscription_id === sub.id && i.issue_date === today && i.status !== 'cancelled'
+    );
+    if (duplicateCycle) {
+      return err(
+        409,
+        'CONFLICT',
+        `Duplicate billing blocked: Invoice ${duplicateCycle.number} was already created for ${sub.number} today.`
+      );
+    }
+
+    const initialStatus: Invoice['status'] =
+      payload.status === 'confirmed' ? 'confirmed' : 'draft';
+    const createdInv = buildInvoiceFromSubscription(sub, initialStatus);
+    mockDb.invoices.unshift(createdInv);
+    sub.last_billed_through = today;
+    sub.activities.unshift({
+      id: `act-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      actor_email: actor?.email ?? 'staff@brightloop.io',
+      action: 'Invoice Generated',
+      note: `Created invoice ${createdInv.number} (${createdInv.currency} ${createdInv.total}).`,
+    });
+    mockDb.recordAudit(actor, 'Invoice', createdInv.number, 'invoice.created_from_subscription', null, {
+      subscription: sub.number,
+      total: createdInv.total,
+    });
+    const response: MockHttpResponse = { status: 201, data: createdInv };
+    if (idempotencyKey) mockDb.processedIdempotencyKeys.set(idempotencyKey, response);
+    return response;
+  }
+
   if (path === '/invoices' && upperMethod === 'GET') {
     const status = query.get('status') ?? '';
     const customerId = query.get('customer_id') ?? '';
@@ -2062,7 +2215,13 @@ export async function handleMockRequest(
       }
       inv.status = 'cancelled';
       inv.balance = '0.00';
-      if (inv.discount_name) inv.discount_released = true;
+      if (inv.discount_name) {
+        inv.discount_released = true;
+        const matchedRule = mockDb.discounts.find((d) => d.name === inv.discount_name);
+        if (matchedRule) {
+          matchedRule.usage_count = Math.max(0, matchedRule.usage_count - 1);
+        }
+      }
     } else if (action === 'send' || action === 'remind') {
       inv.sent_at = new Date().toISOString();
       if (action === 'remind') {
@@ -2131,56 +2290,59 @@ export async function handleMockRequest(
   if (invDetailMatch && upperMethod === 'GET') {
     const inv = mockDb.invoices.find((i) => i.id === invDetailMatch[1]);
     if (!inv) return err(404, 'NOT_FOUND', 'Invoice not found.');
-    return { status: 200, data: { invoice: inv, payments: mockDb.payments.filter((p) => p.invoice_id === inv.id) } };
+    const cust = mockDb.customers.find((c) => c.id === inv.customer_id) ?? null;
+    return {
+      status: 200,
+      data: {
+        invoice: inv,
+        payments: mockDb.payments.filter((p) => p.invoice_id === inv.id),
+        customer: cust,
+      },
+    };
   }
 
   if (path === '/billing/run' && upperMethod === 'POST') {
     if (actor?.role !== 'admin') return err(403, 'FORBIDDEN', 'Only Admin can trigger manual billing runs.');
+    const today = todayIsoDate();
+
+    // Auto-close any Active subscription whose plan has auto_close == true and expiry_date <= today
+    for (const sub of mockDb.subscriptions) {
+      if (sub.status === 'active' && sub.expiry_date && sub.expiry_date <= today) {
+        const plan = mockDb.plans.find((p) => p.id === sub.plan_id);
+        if (plan?.auto_close) {
+          sub.status = 'closed';
+          sub.closed_at = new Date().toISOString();
+          sub.close_reason = 'Automatically closed on plan expiry date.';
+          sub.next_billing_date = null;
+        }
+      }
+    }
+
     const activeSubs = mockDb.subscriptions.filter((s) => s.status === 'active');
     const pausedSubs = mockDb.subscriptions.filter((s) => s.status === 'paused');
 
     let createdCount = 0;
-    activeSubs.slice(0, 1).forEach((sub) => {
+    let skippedActiveCount = 0;
+
+    for (const sub of activeSubs) {
+      const alreadyBilledToday = mockDb.invoices.some(
+        (i) => i.subscription_id === sub.id && i.issue_date === today && i.status !== 'cancelled'
+      );
+      if (alreadyBilledToday) {
+        skippedActiveCount += 1;
+        continue;
+      }
+      const createdInv = buildInvoiceFromSubscription(sub, 'confirmed');
+      mockDb.invoices.unshift(createdInv);
+      sub.last_billed_through = today;
       createdCount += 1;
-      const nextNum = `${mockDb.settings.invoice_prefix}${String(422 + mockDb.invoices.length).padStart(6, '0')}`;
-      mockDb.invoices.unshift({
-        id: `inv-${Date.now()}`,
-        number: nextNum,
-        subscription_id: sub.id,
-        subscription_number: sub.number,
-        customer_id: sub.customer_id,
-        customer_name: sub.customer_name,
-        status: 'confirmed',
-        issue_date: todayIsoDate(),
-        due_date: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
-        sent_at: new Date().toISOString(),
-        currency: sub.currency,
-        subtotal: sub.subtotal,
-        discount_total: sub.discount_total,
-        tax_total: sub.tax_total,
-        total: sub.total,
-        amount_paid: '0.00',
-        balance: sub.total,
-        pdf_ready: true,
-        lines: sub.lines.map((l) => ({
-          id: `il-${Date.now()}-${l.id}`,
-          description: `${l.product_name} × ${l.quantity}`,
-          quantity: l.quantity,
-          unit_price: l.unit_price,
-          tax_rate: l.tax_rate,
-          tax_inclusive: l.tax_inclusive,
-          line_subtotal: l.line_subtotal,
-          line_tax: l.line_tax,
-          line_total: l.line_total,
-        })),
-      });
-    });
+    }
 
     const summary: BillingRunSummary = {
       id: `run-${Date.now()}`,
-      run_date: todayIsoDate(),
+      run_date: today,
       created_count: createdCount,
-      skipped_count: pausedSubs.length + Math.max(0, activeSubs.length - createdCount),
+      skipped_count: pausedSubs.length + skippedActiveCount,
       failed_count: 0,
       error_summary: null,
     };
@@ -2566,8 +2728,182 @@ export async function handleMockRequest(
     }
     const custId = actor.customer_id;
 
+    if (path === '/me/catalog' && upperMethod === 'GET') {
+      return {
+        status: 200,
+        data: {
+          plans: mockDb.plans.filter((p) => p.is_active),
+          products: mockDb.products.filter((p) => p.is_active),
+          taxes: mockDb.taxes.filter((t) => t.is_active),
+          currency: mockDb.settings.currency,
+        },
+      };
+    }
     if (path === '/me/subscriptions' && upperMethod === 'GET') {
       return { status: 200, data: mockDb.subscriptions.filter((s) => s.customer_id === custId) };
+    }
+    if (path === '/me/subscriptions' && upperMethod === 'POST') {
+      const cust = mockDb.customers.find((c) => c.id === custId);
+      const plan = mockDb.plans.find((p) => p.id === payload.plan_id && p.is_active);
+      if (!cust || !plan) {
+        return err(422, 'VALIDATION_ERROR', 'Valid active plan is required.');
+      }
+      const prod = mockDb.products.find((p) => p.id === payload.product_id && p.is_active) ?? mockDb.products[0];
+      const variant = prod?.variants.find((v) => v.id === payload.variant_id) ?? null;
+      const defaultTax = mockDb.taxes.find((t) => t.id === prod?.tax_id) ?? mockDb.taxes[0];
+      const qty = Math.max(plan.min_quantity, Number.parseInt(String(payload.quantity ?? plan.min_quantity), 10) || plan.min_quantity);
+      const unitPrice = roundHalfUp(parseMoney(prod.sales_price) + parseMoney(variant?.extra_price));
+      const baseLine: SubscriptionLine = {
+        id: `sline-${Date.now()}`,
+        product_id: prod.id,
+        product_name: prod.name,
+        variant_id: variant?.id ?? null,
+        variant_label: variant ? `${variant.attribute}: ${variant.value}` : null,
+        quantity: qty,
+        unit_price: toFixedMoney(unitPrice),
+        tax_rate: defaultTax?.rate ?? '18.00',
+        tax_inclusive: defaultTax?.inclusive ?? false,
+        line_subtotal: '0.00',
+        line_tax: '0.00',
+        line_total: '0.00',
+      };
+      const baseTotals = computeSubscriptionTotals([baseLine], '0.00');
+      const autoDisc = evaluateBestAutoDiscount(baseTotals.lines, parseMoney(baseTotals.subtotal));
+      const totals = computeSubscriptionTotals(baseTotals.lines, toFixedMoney(autoDisc.amount));
+      const today = todayIsoDate();
+      const nextBill = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+      const nextNum = `${mockDb.settings.subscription_prefix}${String(101 + mockDb.subscriptions.length).padStart(6, '0')}`;
+
+      const created: Subscription = {
+        id: `sub-${Date.now()}`,
+        number: nextNum,
+        customer_id: cust.id,
+        customer_name: cust.company_name,
+        plan_id: plan.id,
+        plan_name: plan.name,
+        billing_period: plan.billing_period,
+        status: 'active',
+        payment_terms: 'Immediate',
+        anchor_day: new Date().getDate(),
+        start_date: today,
+        expiry_date: plan.valid_to,
+        next_billing_date: nextBill,
+        last_billed_through: null,
+        quote_valid_until: today,
+        paused_at: null,
+        closed_at: null,
+        discount_name: autoDisc.rule?.name ?? null,
+        currency: mockDb.settings.currency,
+        ...totals,
+        activities: [
+          {
+            id: `act-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            actor_email: actor.email,
+            action: 'Self-Service Activated',
+            note: `Subscribed to ${plan.name} directly from Customer Portal.`,
+          },
+        ],
+      };
+      mockDb.subscriptions.unshift(created);
+      return { status: 201, data: created };
+    }
+
+    const portalAddonMatch = path.match(/^\/me\/subscriptions\/([^/]+)\/addons$/);
+    if (portalAddonMatch && upperMethod === 'POST') {
+      const sub = mockDb.subscriptions.find(
+        (s) => s.id === portalAddonMatch[1] && s.customer_id === custId
+      );
+      if (!sub) return err(404, 'NOT_FOUND', 'Subscription not found.');
+      if (sub.status !== 'active' && sub.status !== 'confirmed') {
+        return err(409, 'CONFLICT', 'Add-ons can only be switched on Active or Confirmed subscriptions.');
+      }
+      const addonProd = mockDb.products.find(
+        (p) => p.id === payload.product_id && p.type === 'addon' && p.is_active
+      );
+      if (!addonProd) return err(404, 'NOT_FOUND', 'Add-on product not found.');
+      const enable = Boolean(payload.enabled);
+      const defaultTax = mockDb.taxes.find((t) => t.id === addonProd.tax_id) ?? mockDb.taxes[0];
+
+      let nextLines = [...sub.lines];
+      if (enable) {
+        if (!nextLines.some((l) => l.product_id === addonProd.id)) {
+          nextLines.push({
+            id: `sline-${Date.now()}`,
+            product_id: addonProd.id,
+            product_name: addonProd.name,
+            variant_id: null,
+            variant_label: null,
+            quantity: 1,
+            unit_price: addonProd.sales_price,
+            tax_rate: defaultTax?.rate ?? '18.00',
+            tax_inclusive: defaultTax?.inclusive ?? false,
+            line_subtotal: '0.00',
+            line_tax: '0.00',
+            line_total: '0.00',
+          });
+        }
+      } else {
+        nextLines = nextLines.filter((l) => l.product_id !== addonProd.id);
+        if (nextLines.length === 0) {
+          return err(422, 'VALIDATION_ERROR', 'Subscription must retain at least one primary product line.');
+        }
+      }
+
+      const rawTotals = computeSubscriptionTotals(nextLines, '0.00');
+      const autoDisc = evaluateBestAutoDiscount(rawTotals.lines, parseMoney(rawTotals.subtotal), sub.coupon_code);
+      const finalTotals = computeSubscriptionTotals(rawTotals.lines, toFixedMoney(autoDisc.amount));
+      Object.assign(sub, finalTotals, { discount_name: autoDisc.rule?.name ?? null });
+      sub.activities.unshift({
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        actor_email: actor.email,
+        action: enable ? 'Add-on Switched ON' : 'Add-on Switched OFF',
+        note: `${enable ? 'Enabled' : 'Disabled'} ${addonProd.name} via Customer Portal.`,
+      });
+      return { status: 200, data: sub };
+    }
+
+    const portalSelfActionMatch = path.match(/^\/me\/subscriptions\/([^/]+)\/(pause|resume|close|renew)$/);
+    if (portalSelfActionMatch && upperMethod === 'POST') {
+      const [, subId, selfAction] = portalSelfActionMatch;
+      const sub = mockDb.subscriptions.find((s) => s.id === subId && s.customer_id === custId);
+      if (!sub) return err(404, 'NOT_FOUND', 'Subscription not found.');
+      const plan = mockDb.plans.find((p) => p.id === sub.plan_id);
+
+      if (selfAction === 'pause') {
+        if (!plan?.pausable) return err(409, 'CONFLICT', 'This plan does not allow self-service pausing.');
+        if (sub.status !== 'active') return err(409, 'CONFLICT', 'Only Active subscriptions can be paused.');
+        sub.status = 'paused';
+        sub.paused_at = new Date().toISOString();
+        sub.next_billing_date = null;
+      } else if (selfAction === 'resume') {
+        if (sub.status !== 'paused') return err(409, 'CONFLICT', 'Only Paused subscriptions can be resumed.');
+        sub.status = 'active';
+        sub.paused_at = null;
+        sub.next_billing_date = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+      } else if (selfAction === 'close') {
+        if (!plan?.closable) return err(409, 'CONFLICT', 'This plan cannot be closed early.');
+        const reason = String(payload.close_reason ?? 'Closed by customer via self-service portal.').trim();
+        sub.status = 'closed';
+        sub.closed_at = new Date().toISOString();
+        sub.close_reason = reason;
+        sub.next_billing_date = null;
+      } else if (selfAction === 'renew') {
+        if (!plan?.renewable) return err(409, 'CONFLICT', 'This plan is non-renewable.');
+        sub.status = 'active';
+        sub.closed_at = null;
+        sub.start_date = todayIsoDate();
+        sub.next_billing_date = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+      }
+      sub.activities.unshift({
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        actor_email: actor.email,
+        action: `Self-Service ${selfAction.toUpperCase()}`,
+        note: `Customer executed ${selfAction} via Portal.`,
+      });
+      return { status: 200, data: sub };
     }
     if (path === '/me/invoices' && upperMethod === 'GET') {
       return { status: 200, data: mockDb.invoices.filter((i) => i.customer_id === custId) };

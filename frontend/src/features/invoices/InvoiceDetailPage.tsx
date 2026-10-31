@@ -19,13 +19,14 @@ import {
   Modal,
 } from '../../components/forms/Primitives';
 import { useToast } from '../../hooks/useToast';
-import type { Invoice, PaymentRecord } from '../../types/domain';
+import type { Customer, Invoice, PaymentRecord } from '../../types/domain';
 import { formatDate, formatDateTime, isInvoiceOverdue } from '../../utils/dates';
 import { formatMoney, parseMoney } from '../../utils/money';
 
 interface InvoiceDetailPayload {
   invoice: Invoice;
   payments: PaymentRecord[];
+  customer?: Customer | null;
 }
 
 /**
@@ -122,7 +123,7 @@ export const InvoiceDetailPage: React.FC = () => {
     );
   }
 
-  const { invoice, payments } = detail;
+  const { invoice, payments, customer } = detail;
   const overdue = isInvoiceOverdue(invoice);
   const hasBalance = parseMoney(invoice.balance) > 0;
 
@@ -279,6 +280,55 @@ export const InvoiceDetailPage: React.FC = () => {
                 {formatMoney(invoice.balance, invoice.currency)}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Seller & Customer Bill-To Block (PDF p. 3: Customer details pre-filled on invoice) */}
+        <div
+          className="mosaic-grid-2"
+          style={{
+            padding: '14px 16px',
+            borderRadius: 'var(--rounded-md)',
+            backgroundColor: 'var(--color-canvas-sand)',
+            border: '1px solid var(--color-hairline)',
+          }}
+        >
+          <div>
+            <span className="eyebrow-cap">Issued By</span>
+            <div style={{ marginTop: 4 }}>Brightloop Software Pvt Ltd</div>
+            <div className="type-caption">
+              Indiranagar 100 Ft Rd, Bengaluru, KA 560038 · GSTIN: 29AABCB7781M1Z4
+            </div>
+            <div className="type-caption">
+              Issue Date: {formatDate(invoice.issue_date)} · Due Date: {formatDate(invoice.due_date)}
+            </div>
+          </div>
+
+          <div>
+            <span className="eyebrow-cap">Bill To Customer</span>
+            <div style={{ marginTop: 4 }}>
+              <Link
+                to={`/customers/${invoice.customer_id}`}
+                style={{ color: 'inherit', textDecoration: 'underline' }}
+              >
+                {customer?.company_name ?? invoice.customer_name}
+              </Link>
+            </div>
+            {customer ? (
+              <>
+                <div className="type-caption">
+                  Attn: {customer.name} · {customer.email}
+                  {customer.tax_id ? ` · Tax ID: ${customer.tax_id}` : ''}
+                </div>
+                <div className="type-caption">
+                  {customer.billing_address.line1}, {customer.billing_address.city},{' '}
+                  {customer.billing_address.state} {customer.billing_address.postal_code},{' '}
+                  {customer.billing_address.country}
+                </div>
+              </>
+            ) : (
+              <div className="type-caption">Customer ID: {invoice.customer_id}</div>
+            )}
           </div>
         </div>
 

@@ -47,7 +47,7 @@ export const DiscountsPage: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [usageLimit, setUsageLimit] = useState('100');
   const [scope, setScope] = useState<DiscountScope>('subscription');
-  const [selectedProdId, setSelectedProdId] = useState('');
+  const [selectedProdIds, setSelectedProdIds] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -62,7 +62,7 @@ export const DiscountsPage: React.FC = () => {
       ]);
       setDiscounts(discList);
       setProducts(prodList);
-      if (prodList[0]) setSelectedProdId(prodList[0].id);
+      if (prodList[0]) setSelectedProdIds([prodList[0].id]);
       setCurrency(settings.currency);
     } catch {
       showToast('Failed to load discount rules', 'error');
@@ -104,7 +104,13 @@ export const DiscountsPage: React.FC = () => {
     setEndDate(rule.end_date ?? '');
     setUsageLimit(rule.usage_limit !== null ? String(rule.usage_limit) : '');
     setScope(rule.scope);
-    setSelectedProdId(rule.product_ids[0] ?? products[0]?.id ?? '');
+    setSelectedProdIds(
+      rule.product_ids.length > 0
+        ? rule.product_ids
+        : products[0]
+        ? [products[0].id]
+        : []
+    );
     setIsActive(rule.is_active);
     setFormErrors({});
     setIsModalOpen(true);
@@ -149,6 +155,9 @@ export const DiscountsPage: React.FC = () => {
     if (endDate && endDate < startDate) {
       errs.end_date = 'End date must be on or after start date.';
     }
+    if (scope === 'product' && selectedProdIds.length === 0) {
+      errs.product_ids = 'Select at least one eligible product SKU.';
+    }
     if (Object.keys(errs).length > 0) {
       setFormErrors(errs);
       return;
@@ -169,7 +178,7 @@ export const DiscountsPage: React.FC = () => {
         end_date: endDate || null,
         usage_limit: usageLimit.trim() ? Math.max(1, Number.parseInt(usageLimit, 10)) : null,
         scope,
-        product_ids: scope === 'product' && selectedProdId ? [selectedProdId] : [],
+        product_ids: scope === 'product' ? selectedProdIds : [],
         is_active: isActive,
       };
 
@@ -399,12 +408,50 @@ export const DiscountsPage: React.FC = () => {
           </div>
 
           {scope === 'product' ? (
-            <FormSelect
-              label="Eligible Product SKU"
-              value={selectedProdId}
-              onChange={(e) => setSelectedProdId(e.target.value)}
-              options={products.map((p) => ({ value: p.id, label: p.name }))}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span className="form-label">Eligible Specific Products</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {products.map((p) => {
+                  const checked = selectedProdIds.includes(p.id);
+                  return (
+                    <label
+                      key={p.id}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '6px 12px',
+                        borderRadius: 'var(--rounded-pill)',
+                        border: `1px solid ${
+                          checked ? 'var(--color-ink)' : 'var(--color-hairline-strong)'
+                        }`,
+                        backgroundColor: checked
+                          ? 'var(--color-canvas-sand)'
+                          : 'var(--color-surface)',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProdIds((prev) => [...prev, p.id]);
+                          } else {
+                            setSelectedProdIds((prev) => prev.filter((id) => id !== p.id));
+                          }
+                        }}
+                      />
+                      <span>{p.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {formErrors.product_ids ? (
+                <span className="form-error-text">{formErrors.product_ids}</span>
+              ) : null}
+            </div>
           ) : null}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
 import { apiRequest } from '../../api/client';
 import { StatusChip } from '../../components/chips/StatusChip';
-import { Button } from '../../components/forms/Primitives';
+import { Button, SegmentedTabs } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -222,6 +222,33 @@ export const InvoicesPage: React.FC = () => {
           <span className="type-caption">Confirmed &amp; past due date</span>
         </div>
       </section>
+
+      {/* Quick Receivable View Segmented Tabs */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <SegmentedTabs
+          ariaLabel="Invoice ledger quick view"
+          value={overdueOnly ? 'overdue' : statusFilter}
+          onChange={(val) => {
+            if (val === 'overdue') {
+              setOverdueOnly(true);
+              setStatusFilter('');
+            } else {
+              setOverdueOnly(false);
+              setStatusFilter(val);
+            }
+            setPage(1);
+          }}
+          items={[
+            { value: '', label: 'All Invoices' },
+            { value: 'overdue', label: 'Overdue', count: ledgerRollup.overdueCount },
+            { value: 'confirmed', label: 'Confirmed' },
+            { value: 'paid', label: 'Paid' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'cancelled', label: 'Cancelled' },
+          ]}
+        />
+        <span className="type-caption">{total} ledger documents</span>
+      </div>
 
       <DataTable
         columns={columns}

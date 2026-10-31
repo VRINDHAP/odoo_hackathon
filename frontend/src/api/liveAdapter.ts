@@ -234,10 +234,21 @@ export function normalizeLiveResponse<T>(
   }
 
   if (
-    /^\/subscriptions\/[^/]+(\/.*)?$/.test(originalCleanPath) &&
+    /^\/(me\/)?subscriptions\/[^/]+(\/.*)?$/.test(originalCleanPath) &&
     data &&
     typeof data === 'object' &&
     !Array.isArray(data) &&
+    'number' in data &&
+    'plan_id' in data
+  ) {
+    return normalizeSubscriptionRecord(data as Record<string, unknown>) as unknown as T;
+  }
+
+  if (
+    originalCleanPath === '/me/subscriptions' &&
+    upperMethod === 'POST' &&
+    data &&
+    typeof data === 'object' &&
     'number' in data &&
     'plan_id' in data
   ) {
@@ -248,6 +259,24 @@ export function normalizeLiveResponse<T>(
     return data.map((item) =>
       normalizeSubscriptionRecord(item as Record<string, unknown>)
     ) as unknown as T;
+  }
+
+  // Invoice detail normalization ({ invoice, payments, customer } vs raw Invoice)
+  if (
+    /^\/invoices\/[^/]+$/.test(originalCleanPath) &&
+    upperMethod === 'GET' &&
+    data &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    !('invoice' in data) &&
+    'number' in data
+  ) {
+    const rawInv = data as Record<string, unknown>;
+    return {
+      invoice: rawInv,
+      payments: Array.isArray(rawInv.payments) ? rawInv.payments : [],
+      customer: (rawInv.customer as Record<string, unknown> | null) ?? null,
+    } as unknown as T;
   }
 
   // 4. Paginated list endpoints where live FastAPI may return raw Array + X-Total-Count

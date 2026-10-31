@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowLeft,
   ArrowUpRight,
+  FilePlus2,
   PauseCircle,
   PlayCircle,
   Plus,
@@ -25,21 +26,26 @@ import {
 import { useToast } from '../../hooks/useToast';
 import type {
   DiscountRule,
+  Invoice,
+  PaginatedResponse,
+  PaymentTerms,
   Plan,
   Product,
   Subscription,
   SubscriptionLine,
   TaxRule,
 } from '../../types/domain';
-import { formatDate, formatDateTime, todayIsoDate } from '../../utils/dates';
+import { formatDate, formatDateTime, isInvoiceOverdue, todayIsoDate } from '../../utils/dates';
 import { formatMoney, parseMoney, roundHalfUp, toFixedMoney } from '../../utils/money';
+import { isValidDateRange } from '../../utils/validation';
 
 /**
- * FE-3.4 & FE-3.5: Subscription Detail, Lifecycle Stepper, Live Draft Line Editor
- * & Plan-Flag-Gated Transitions [SPEC.md §5.4, §5.6, §6.1, §7.1, §12.2, §16, §18]
+ * FE-3.4 & FE-3.5: Subscription Detail, Lifecycle Stepper, Live Draft Line Editor,
+ * Linked Invoices & Plan-Flag-Gated Transitions [SPEC.md §5.4, §5.6, §6.1, §7.1, §12.2 & PDF p. 3]
  */
 export const SubscriptionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { showToast } = useToast();
 
   const [sub, setSub] = useState<Subscription | null>(null);
@@ -47,15 +53,20 @@ export const SubscriptionDetailPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [taxes, setTaxes] = useState<TaxRule[]>([]);
   const [discounts, setDiscounts] = useState<DiscountRule[]>([]);
+  const [linkedInvoices, setLinkedInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Live Draft Editor State
   const [draftLines, setDraftLines] = useState<SubscriptionLine[]>([]);
+  const [draftStartDate, setDraftStartDate] = useState('');
+  const [draftExpiryDate, setDraftExpiryDate] = useState('');
+  const [draftTerms, setDraftTerms] = useState<PaymentTerms>('Net 15');
   const [couponInput, setCouponInput] = useState('');
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
-  // Lifecycle Transition Modals
+  // Lifecycle & Invoice Creation Mutations
   const [isMutatingState, setIsMutatingState] = useState(false);
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
   const [activateConfirmOpen, setActivateConfirmOpen] = useState(false);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
@@ -69,20 +80,31 @@ export const SubscriptionDetailPage: React.FC = () => {
     if (!id) return;
     setIsLoading(true);
     try {
-      const [subData, planList, prodList, taxList, discList] = await Promise.all([
+      const [subData, planList, prodList, taxList, discList, invRes] = await Promise.all([
         apiRequest<Subscription>(`/subscriptions/${id}`),
         apiRequest<Plan[]>('/plans'),
         apiRequest<Product[]>('/products'),
         apiRequest<TaxRule[]>('/taxes'),
         apiRequest<DiscountRule[]>('/discounts').catch(() => [] as DiscountRule[]),
+        apiRequest<PaginatedResponse<Invoice>>('/invoices?page=1&page_size=100').catch(() => ({
+          items: [] as Invoice[],
+          page: 1,
+          page_size: 100,
+          total: 0,
+          total_pages: 1,
+        })),
       ]);
       setSub(subData);
       setDraftLines(subData.lines);
+      setDraftStartDate(subData.start_date ?? '');
+      setDraftExpiryDate(subData.expiry_date ?? '');
+      setDraftTerms(subData.payment_terms);
       setCouponInput(subData.coupon_code ?? '');
       setPlans(planList);
       setProducts(prodList);
       setTaxes(taxList);
       setDiscounts(discList);
+      setLinkedInvoices(invRes.items.filter((inv) => inv.subscription_id === subData.id));
       if (planList[0]) setTargetUpgradePlanId(planList[0].id);
     } catch {
       showToast('Subscription not found', 'error');
@@ -140,19 +162,36 @@ export const SubscriptionDetailPage: React.FC = () => {
       };
     });
 
-    // Evaluate best eligible discount preview (SPEC.md §7.3)
+    // Evaluate best eligible discount preview (SPEC.md §7.3 & PDF p. 4)
     let bestDiscountAmt = isDraft ? 0 : parseMoney(sub?.discount_total);
     let activeDiscountLabel = sub?.discount_name ?? null;
+    const today = todayIsoDate();
 
     if (isDraft && discounts.length > 0) {
+      const totalQty = computedLines.reduce((acc, l) => acc + Math.max(0, l.quantity), 0);
       for (const d of discounts) {
         if (!d.is_active) continue;
+        if (d.start_date && today < d.start_date) continue;
+        if (d.end_date && today > d.end_date) continue;
+        if (d.usage_limit !== null && d.usage_count >= d.usage_limit) continue;
         if (couponInput && d.code && d.code !== couponInput.trim().toUpperCase()) continue;
-        if (subtotal < parseMoney(d.min_purchase_amount)) continue;
+        if (totalQty < d.min_quantity) continue;
+
+        let eligibleBase = subtotal;
+        if (d.scope === 'product') {
+          const matching = computedLines.filter((ln) => d.product_ids.includes(ln.product_id));
+          if (matching.length === 0) continue;
+          eligibleBase = matching.reduce(
+            (sum, ln) => roundHalfUp(sum + parseMoney(ln.line_subtotal)),
+            0
+          );
+        }
+        if (eligibleBase < parseMoney(d.min_purchase_amount)) continue;
+
         const candidate =
           d.type === 'percent'
-            ? roundHalfUp((subtotal * parseMoney(d.value)) / 100)
-            : Math.min(subtotal, parseMoney(d.value));
+            ? roundHalfUp((eligibleBase * parseMoney(d.value)) / 100)
+            : Math.min(eligibleBase, parseMoney(d.value));
         if (candidate > bestDiscountAmt) {
           bestDiscountAmt = candidate;
           activeDiscountLabel = d.name;
@@ -208,6 +247,10 @@ export const SubscriptionDetailPage: React.FC = () => {
       );
       return false;
     }
+    if (draftStartDate && draftExpiryDate && !isValidDateRange(draftStartDate, draftExpiryDate)) {
+      showToast('Expiry date must be on or after the start date.', 'error');
+      return false;
+    }
 
     setIsSavingDraft(true);
     try {
@@ -215,6 +258,9 @@ export const SubscriptionDetailPage: React.FC = () => {
         method: 'PATCH',
         body: {
           lines: livePricing.lines,
+          start_date: draftStartDate || null,
+          expiry_date: draftExpiryDate || null,
+          payment_terms: draftTerms,
           discount_total: livePricing.discountTotal,
           discount_name: livePricing.discountLabel,
           coupon_code: couponInput.trim() || null,
@@ -222,7 +268,7 @@ export const SubscriptionDetailPage: React.FC = () => {
       });
       setSub(updated);
       setDraftLines(updated.lines);
-      showToast('Saved Draft line items and totals', 'success');
+      showToast('Saved Draft line items and contract terms', 'success');
       return true;
     } catch (err) {
       showToast(err instanceof ApiClientError ? err.message : 'Save failed', 'error');
@@ -232,10 +278,29 @@ export const SubscriptionDetailPage: React.FC = () => {
     }
   };
 
+  const handleCreateInvoice = async () => {
+    if (!sub) return;
+    setIsCreatingInvoice(true);
+    try {
+      const created = await apiRequest<Invoice>('/invoices', {
+        method: 'POST',
+        body: { subscription_id: sub.id, status: 'draft' },
+      });
+      showToast(`Generated ${created.number} from ${sub.number}`, 'success');
+      navigate(`/invoices/${created.id}`);
+    } catch (err) {
+      showToast(
+        err instanceof ApiClientError ? err.message : 'Failed to create invoice from subscription',
+        'error'
+      );
+    } finally {
+      setIsCreatingInvoice(false);
+    }
+  };
+
   const dispatchTransition = async (target: Subscription['status']) => {
     if (!sub) return;
 
-    // Frontend Validation Before Dispatch (SPEC.md §6.1 Table)
     if (sub.status === 'draft' && target === 'quotation') {
       const saved = await handleSaveDraft();
       if (!saved) return;
@@ -259,6 +324,8 @@ export const SubscriptionDetailPage: React.FC = () => {
       });
       setSub(updated);
       setDraftLines(updated.lines);
+      setDraftStartDate(updated.start_date ?? '');
+      setDraftExpiryDate(updated.expiry_date ?? '');
       setActivateConfirmOpen(false);
       setCancelConfirmOpen(false);
       showToast(`Subscription transitioned to ${updated.status.toUpperCase()}`, 'success');
@@ -367,10 +434,21 @@ export const SubscriptionDetailPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <Link to="/subscriptions" className="type-caption" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <Link
+          to="/subscriptions"
+          className="type-caption"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        >
           <ArrowLeft size={14} />
           Back to Subscriptions
+        </Link>
+        <Link
+          to={`/customers/${sub.customer_id}`}
+          className="type-caption"
+          style={{ textDecoration: 'underline' }}
+        >
+          View Customer Profile →
         </Link>
       </div>
 
@@ -409,7 +487,14 @@ export const SubscriptionDetailPage: React.FC = () => {
             <span className="mono-text">{sub.number}</span>
             <StatusChip status={sub.status} />
           </div>
-          <h1 className="type-display-md">{sub.customer_name}</h1>
+          <h1 className="type-display-md">
+            <Link
+              to={`/customers/${sub.customer_id}`}
+              style={{ color: 'inherit', textDecoration: 'none' }}
+            >
+              {sub.customer_name}
+            </Link>
+          </h1>
           <p className="type-caption">
             Plan: {sub.plan_name} ({sub.billing_period}) · Payment Terms: {sub.payment_terms} · Anchor Day: {sub.anchor_day}
           </p>
@@ -450,6 +535,14 @@ export const SubscriptionDetailPage: React.FC = () => {
 
           {sub.status === 'confirmed' ? (
             <>
+              <Button
+                variant="outline"
+                onClick={() => void handleCreateInvoice()}
+                isLoading={isCreatingInvoice}
+              >
+                <FilePlus2 size={14} />
+                Create Invoice
+              </Button>
               <Button variant="danger" onClick={() => setCancelConfirmOpen(true)}>
                 Cancel
               </Button>
@@ -461,6 +554,14 @@ export const SubscriptionDetailPage: React.FC = () => {
 
           {sub.status === 'active' ? (
             <>
+              <Button
+                variant="primary"
+                onClick={() => void handleCreateInvoice()}
+                isLoading={isCreatingInvoice}
+              >
+                <FilePlus2 size={14} />
+                Create Invoice
+              </Button>
               <Button variant="outline" onClick={() => setProrationOpen(true)}>
                 <ArrowUpRight size={14} />
                 Proration Preview
@@ -507,7 +608,7 @@ export const SubscriptionDetailPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Horizontal Lifecycle Stepper Card */}
+      {/* Horizontal Lifecycle Stepper + 6-Field Contract Metadata Bar (PDF p. 3) */}
       <section className="product-tile-compact" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <LifecycleStepper
@@ -519,42 +620,88 @@ export const SubscriptionDetailPage: React.FC = () => {
             Min Plan Qty: <strong>{minQtyRequired}</strong> ·{' '}
             {currentPlan?.pausable ? 'Pausable' : 'Non-Pausable'} ·{' '}
             {currentPlan?.closable ? 'Closable' : 'Non-Closable'} ·{' '}
-            {currentPlan?.renewable ? 'Renewable' : 'Non-Renewable'}
+            {currentPlan?.renewable ? 'Renewable' : 'Non-Renewable'} ·{' '}
+            {currentPlan?.auto_close ? 'Auto-Close' : 'Manual Close'}
           </span>
         </div>
 
         <div
+          className="meta-grid-6"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-            gap: 12,
             paddingTop: 12,
             borderTop: '1px solid var(--color-hairline)',
           }}
         >
           <div>
             <span className="eyebrow-cap">Start Date</span>
-            <div title={sub.start_date ? `${sub.start_date}T00:00:00Z` : undefined}>
-              {formatDate(sub.start_date)}
-            </div>
+            {isDraft ? (
+              <input
+                type="date"
+                className="form-input"
+                style={{ marginTop: 4, padding: '6px 8px' }}
+                value={draftStartDate}
+                onChange={(e) => setDraftStartDate(e.target.value)}
+                aria-label="Draft start date"
+              />
+            ) : (
+              <div title={sub.start_date ? `${sub.start_date}T00:00:00Z` : undefined}>
+                {formatDate(sub.start_date)}
+              </div>
+            )}
           </div>
+
+          <div>
+            <span className="eyebrow-cap">Expiry Date</span>
+            {isDraft ? (
+              <input
+                type="date"
+                className="form-input"
+                style={{ marginTop: 4, padding: '6px 8px' }}
+                value={draftExpiryDate}
+                onChange={(e) => setDraftExpiryDate(e.target.value)}
+                aria-label="Draft expiry date"
+              />
+            ) : (
+              <div title={sub.expiry_date ? `${sub.expiry_date}T00:00:00Z` : undefined}>
+                {formatDate(sub.expiry_date)}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <span className="eyebrow-cap">Payment Terms</span>
+            {isDraft ? (
+              <select
+                className="form-select"
+                style={{ marginTop: 4, padding: '6px 8px' }}
+                value={draftTerms}
+                onChange={(e) => setDraftTerms(e.target.value as PaymentTerms)}
+                aria-label="Draft payment terms"
+              >
+                <option value="Immediate">Immediate</option>
+                <option value="Net 15">Net 15</option>
+                <option value="Net 30">Net 30</option>
+              </select>
+            ) : (
+              <div>{sub.payment_terms}</div>
+            )}
+          </div>
+
           <div>
             <span className="eyebrow-cap">Next Billing</span>
             <div title={sub.next_billing_date ? `${sub.next_billing_date}T00:00:00Z` : undefined}>
               {formatDate(sub.next_billing_date)}
             </div>
           </div>
-          <div>
-            <span className="eyebrow-cap">Last Billed Through</span>
-            <div>{formatDate(sub.last_billed_through)}</div>
-          </div>
+
           <div>
             <span className="eyebrow-cap">Quote Valid Until</span>
             <div>{formatDate(sub.quote_valid_until)}</div>
           </div>
+
           <div>
             <span className="eyebrow-cap">Billing Anchor Day</span>
-            <div>Day {sub.anchor_day} (Read-only)</div>
+            <div>Day {sub.anchor_day}</div>
           </div>
         </div>
       </section>
@@ -606,42 +753,86 @@ export const SubscriptionDetailPage: React.FC = () => {
               {livePricing.lines.map((line, index) => {
                 const qtyBelowMin = isDraft && line.quantity < minQtyRequired;
                 const negativeUnit = isDraft && parseMoney(line.unit_price) < 0;
+                const lineProduct = products.find((p) => p.id === line.product_id);
 
                 return (
                   <tr key={line.id}>
                     <td>
                       {isDraft ? (
-                        <select
-                          className="form-select"
-                          value={line.product_id}
-                          onChange={(e) => {
-                            const prod = products.find((p) => p.id === e.target.value);
-                            if (!prod) return;
-                            const tax = taxes.find((t) => t.id === prod.tax_id) ?? taxes[0];
-                            setDraftLines((prev) =>
-                              prev.map((l, i) =>
-                                i === index
-                                  ? {
-                                      ...l,
-                                      product_id: prod.id,
-                                      product_name: prod.name,
-                                      variant_id: null,
-                                      variant_label: null,
-                                      unit_price: prod.sales_price,
-                                      tax_rate: tax?.rate ?? '18.00',
-                                      tax_inclusive: tax?.inclusive ?? false,
-                                    }
-                                  : l
-                              )
-                            );
-                          }}
-                        >
-                          {products.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <select
+                            className="form-select"
+                            value={line.product_id}
+                            aria-label={`Product for line ${index + 1}`}
+                            onChange={(e) => {
+                              const prod = products.find((p) => p.id === e.target.value);
+                              if (!prod) return;
+                              const tax = taxes.find((t) => t.id === prod.tax_id) ?? taxes[0];
+                              setDraftLines((prev) =>
+                                prev.map((l, i) =>
+                                  i === index
+                                    ? {
+                                        ...l,
+                                        product_id: prod.id,
+                                        product_name: prod.name,
+                                        variant_id: null,
+                                        variant_label: null,
+                                        unit_price: prod.sales_price,
+                                        tax_rate: tax?.rate ?? '18.00',
+                                        tax_inclusive: tax?.inclusive ?? false,
+                                      }
+                                    : l
+                                )
+                              );
+                            }}
+                          >
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+
+                          {lineProduct && lineProduct.variants.length > 0 ? (
+                            <select
+                              className="form-select"
+                              style={{ fontSize: 12, padding: '5px 8px' }}
+                              value={line.variant_id ?? ''}
+                              aria-label={`Variant for line ${index + 1}`}
+                              onChange={(e) => {
+                                const vid = e.target.value;
+                                const chosenVar = lineProduct.variants.find((v) => v.id === vid);
+                                const nextUnit = toFixedMoney(
+                                  roundHalfUp(
+                                    parseMoney(lineProduct.sales_price) +
+                                      (chosenVar ? parseMoney(chosenVar.extra_price) : 0)
+                                  )
+                                );
+                                setDraftLines((prev) =>
+                                  prev.map((l, i) =>
+                                    i === index
+                                      ? {
+                                          ...l,
+                                          variant_id: chosenVar?.id ?? null,
+                                          variant_label: chosenVar
+                                            ? `${chosenVar.attribute}: ${chosenVar.value}`
+                                            : null,
+                                          unit_price: nextUnit,
+                                        }
+                                      : l
+                                  )
+                                );
+                              }}
+                            >
+                              <option value="">Base Edition (+0.00)</option>
+                              {lineProduct.variants.map((v) => (
+                                <option key={v.id} value={v.id}>
+                                  {v.attribute}: {v.value} (+{v.extra_price})
+                                </option>
+                              ))}
+                            </select>
+                          ) : null}
+                        </div>
                       ) : (
                         <div>
                           <span>{line.product_name}</span>
@@ -760,7 +951,7 @@ export const SubscriptionDetailPage: React.FC = () => {
                 <StatusChip status={livePricing.discountLabel} variant="yellow" showDot={false} />
               </div>
             ) : null}
-            Note: Discounts are verified for expiry at each invoice generation date. Rounding uses half-up 2-decimal precision.
+            Note: Discounts are verified automatically for start/end date and redemption limit at each invoice generation date.
           </div>
 
           <div style={{ minWidth: 280, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -792,6 +983,89 @@ export const SubscriptionDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Linked Invoices Generated From This Subscription (PDF p. 3: Billing Day) */}
+      <section className="product-tile" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <span className="eyebrow-cap">Receivables Ledger</span>
+            <h2 className="type-heading" style={{ marginTop: 4 }}>
+              Linked Invoices ({linkedInvoices.length})
+            </h2>
+          </div>
+          {sub.status === 'active' || sub.status === 'confirmed' ? (
+            <Button
+              variant="outline"
+              onClick={() => void handleCreateInvoice()}
+              isLoading={isCreatingInvoice}
+            >
+              <FilePlus2 size={14} />
+              Create Invoice Now
+            </Button>
+          ) : null}
+        </div>
+
+        {linkedInvoices.length === 0 ? (
+          <p className="type-caption">
+            No invoices have been generated for this subscription yet.
+          </p>
+        ) : (
+          <div className="data-table-shell">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Status</th>
+                  <th>Issue / Due Date</th>
+                  <th className="col-right">Total</th>
+                  <th className="col-right">Paid</th>
+                  <th className="col-right">Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linkedInvoices.map((inv) => (
+                  <tr
+                    key={inv.id}
+                    className="clickable-row"
+                    onClick={() => navigate(`/invoices/${inv.id}`)}
+                  >
+                    <td>
+                      <Link
+                        to={`/invoices/${inv.id}`}
+                        className="mono-text"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {inv.number}
+                      </Link>
+                    </td>
+                    <td>
+                      <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                        <StatusChip status={inv.status} />
+                        {isInvoiceOverdue(inv) ? (
+                          <StatusChip status="Overdue" variant="overdue" />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="type-caption">
+                      {formatDate(inv.issue_date)} → {formatDate(inv.due_date)}
+                    </td>
+                    <td className="cell-numeric">{formatMoney(inv.total, inv.currency)}</td>
+                    <td className="cell-numeric" style={{ color: 'var(--chip-active-text)' }}>
+                      {formatMoney(inv.amount_paid, inv.currency)}
+                    </td>
+                    <td
+                      className="cell-numeric"
+                      style={{ color: isInvoiceOverdue(inv) ? 'var(--color-danger)' : undefined }}
+                    >
+                      {formatMoney(inv.balance, inv.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* Activity Timeline */}
