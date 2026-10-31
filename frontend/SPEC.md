@@ -274,13 +274,31 @@ Additional branches:
 - `Payment History`: Table of past payments, receipts, and payment method [PDF 12].
 - `Profile and Password`: Update billing address, change password [PDF 8, 12].
 
-### 12.4 UX Consistency Rules [PDF 12]
-- Status must always be rendered as a colored chip + state stepper [PDF 12].
-- Destructive actions (Cancel invoice, Close subscription, demote user) require explicit modal confirmation [PDF 12].
-- Financial amounts must be right-aligned with currency code prefix/suffix [PDF 12].
-- Form validation errors must appear inline beneath the respective input field [PDF 12].
-- Every data table must include filter controls, search bar, sorting headers, pagination, and empty state graphics [PDF 12].
-- Mobile responsiveness: Collapse side navigation into a drawer; stack KPI cards vertically on small screens [PDF 12].
+### 12.4 UX Consistency, Color System & Robust Validation Rules [PDF 12]
+- **Curated, Consistent Color Palette**:
+  - Base theme tokens defined in CSS root: `--bg-primary: #0f172a` (dark) or `#f8fafc` (light), `--card-bg: #ffffff`, `--border-color: #e2e8f0`, `--text-primary: #0f172a`, `--text-secondary: #64748b`.
+  - Semantic Status Chips & Stepper Palette:
+    - `Draft`: Neutral Slate (Text: `#475569`, Background: `#f1f5f9`, Border: `#cbd5e1`).
+    - `Quotation`: Amber / Warning (Text: `#b45309`, Background: `#fef3c7`, Border: `#fde68a`).
+    - `Confirmed`: Blue / Info (Text: `#1d4ed8`, Background: `#dbeafe`, Border: `#bfdbfe`).
+    - `Active`: Emerald / Success (Text: `#047857`, Background: `#d1fae5`, Border: `#a7f3d0`).
+    - `Paused`: Orange / Notice (Text: `#c2410c`, Background: `#ffedd5`, Border: `#fed7aa`).
+    - `Closed`: Purple / Completed (Text: `#6b21a8`, Background: `#f3e8ff`, Border: `#e9d5ff`).
+    - `Cancelled`: Rose / Danger (Text: `#be123c`, Background: `#ffe4e6`, Border: `#fecdd3`).
+- **Dynamic & Real-Time Data Recalculation**:
+  - Live line editing in Draft mode: changing quantity or unit price dynamically recalculates line subtotal, estimated taxes, eligible discount deductions, and totals without needing page reload or server round-trip [PDF 7.1, 12].
+  - Live password rule checklist: ticks update in real-time as keystrokes meet length (>8), uppercase, lowercase, and special character conditions [PDF 8, 12].
+  - Real-time job observability: background billing runs and PDF generation display active progress loaders and dynamically refresh state upon completion [PDF 11, 13].
+- **Robust Client-Side Input Validation**:
+  - Inline error feedback beneath every field; red highlight borders and immediate validation on blur and submit [PDF 8, 12].
+  - Impossible values blocked at UI layer: negative unit prices, line quantities below `plan.min_quantity`, payment amounts exceeding invoice `balance` [PDF 5.4, 7.4].
+  - Error schema mapping: server error responses `{ "fields": [{ "field": "...", "message": "..." }] }` highlight and attach directly to the offending form control [PDF 8].
+- **General UX Principles**:
+  - Status must always be rendered as a colored chip + state stepper [PDF 12].
+  - Destructive actions (Cancel invoice, Close subscription, demote user) require explicit modal confirmation [PDF 12].
+  - Financial amounts must be right-aligned with currency code prefix/suffix [PDF 12].
+  - Empty states render with descriptive typography and clear call-to-action buttons [PDF 12].
+  - Fully responsive across desktop (>= 1280px), tablet (768px - 1279px), and mobile (< 768px) [PDF 12].
 
 ---
 

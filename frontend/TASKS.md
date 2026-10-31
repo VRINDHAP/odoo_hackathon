@@ -6,10 +6,10 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 1: Foundation (Auth, Roles, Password Reset, Staff Creation, Audit) [PDF 17]
 
-- [ ] **FE-1.1**: Initialize React Vite application with TypeScript, routing skeleton, and vanilla CSS design system tokens.
-  - **Input**: Vite React project template and design tokens (colors, typography, spacing).
-  - **Expected Output**: Running SPA dev server with base layout and CSS resets.
-  - **Acceptance Test**: App loads with zero console errors; theme variables resolve correctly.
+- [ ] **FE-1.1**: Initialize React Vite application with TypeScript, routing skeleton, and vanilla CSS design system tokens (`theme.css`).
+  - **Input**: Vite React template, curated color tokens (Slate/Blue/Emerald/Amber/Rose status chips), elevation, typography, and spacing variables.
+  - **Expected Output**: Running SPA dev server with clean visual theme, consistent layout grid, responsive navbar/sidebar, and interactive button/card primitives.
+  - **Acceptance Test**: App loads with zero console errors; CSS variables consistently style all primitives across viewports.
   - **Dependencies**: None.
 
 - [ ] **FE-1.2**: Implement API client with JWT storage, Bearer auth header injection, and 401 token refresh interceptor [PDF 3, 8, 9].
@@ -92,10 +92,10 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
   - **Acceptance Test**: Filtering by status and customer updates list within 300 ms debounce.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-3.4**: Build Subscription Detail view with lifecycle status stepper and editable line items [PDF 5.6, 6.1, 7.1, 12].
+- [ ] **FE-3.4**: Build Subscription Detail view with lifecycle status stepper and dynamic real-time line editor [PDF 5.6, 6.1, 7.1, 12].
   - **Input**: `GET /subscriptions/{id}`, `PATCH /subscriptions/{id}`.
-  - **Expected Output**: Stepper rendering `Draft -> Quotation -> Confirmed -> Active -> Closed`; line editor allowing quantity and unit price edits in Draft mode.
-  - **Acceptance Test**: In Draft mode, totals recompute dynamically with rounded 2-decimal sums; non-draft fields lock.
+  - **Expected Output**: Status stepper (`Draft -> Quotation -> Confirmed -> Active -> Closed`); real-time line editor dynamically recalculating line subtotal, estimated taxes, and document totals live as quantity/price change.
+  - **Acceptance Test**: In Draft mode, totals recompute dynamically on keystroke with rounded 2-decimal sums; non-draft fields lock; negative values blocked inline.
   - **Dependencies**: FE-3.3.
 
 - [ ] **FE-3.5**: Implement Subscription Transition actions gated by plan behavior flags [PDF 5.4, 6.1, 8].

@@ -486,7 +486,11 @@ backend/
   - Customer isolation: Customer token attempting to read another customer's invoice returns 403/404 [PDF 15].
   - RBAC verification on every single endpoint [PDF 15].
 - **E2E Flow**: Signup -> Template -> Quotation -> Confirm -> Activate -> Bill -> Pay -> Report [PDF 15].
-- **Observability**: Structured JSON logging including `request_id`, Prometheus latency metrics, Sentry error tracking, alerts on failed billing runs [PDF 15].
+- **Observability & Debugging**:
+  - Structured JSON logging (`app/core/logging.py`) embedding `request_id` (generated via middleware), `user_id`, `actor_role`, `endpoint`, and `duration_ms` on every HTTP request and Celery job [PDF 15].
+  - Unified Exception Handler (`app/core/errors.py`) mapping domain exceptions (`IllegalTransitionException`, `OverpaymentException`, `RateLimitException`) to standardized JSON responses `{ "code": string, "message": string, "fields": [...] }` [PDF 8].
+  - Health & Diagnostics endpoints: `GET /api/v1/health` verifying PostgreSQL connection pool and Redis cache readiness [PDF 15].
+  - Prometheus latency metrics middleware, Sentry error tracking, and automated alert logging on failed billing runs stored in `billing_runs` [PDF 5.10, 15].
 
 ---
 

@@ -47,6 +47,30 @@ Work is strictly partitioned between two developers so no two people edit the sa
   - **Built-in Mock/Sandbox Payment Provider**: The `PaymentProvider` interface must include a `SimulatedPaymentProvider` alongside Razorpay/Stripe so evaluators can test instant checkout and webhooks offline with zero external API keys [PDF 7.4].
   - **Local Mailer**: SMTP client works with standard SMTP or local MailHog container without requiring paid SendGrid/Mailgun accounts [PDF 13].
 
+## 3.2 Hackathon Evaluation Criteria & Priorities (Nandana & Vrindha)
+Judges heavily weight the following technical pillars for backend evaluation:
+1. **Modular Architecture & Layering**:
+   - Strict separation of concerns inside each module: `router (HTTP)` -> `service (business logic)` -> `repository (SQL)` -> `models (entities)` [PDF 3, 14].
+   - Strict domain isolation between Nandana's and Vrindha's modules via typed contracts in `app/core/contracts.py`. Zero cross-module repository imports [PDF 3].
+2. **Robust Input Validation**:
+   - Every endpoint enforced with strict Pydantic v2 schemas; automatic rejection of invalid payloads with structured error body `{ "code": string, "message": string, "fields": [{ "field": string, "message": string }] }` [PDF 8].
+   - Strict server-side regex validation for passwords (`^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$`), money bounds (`NUMERIC(14,2)` > 0), plan quantities >= `min_quantity` [PDF 5.4, 8].
+3. **Dynamic & Real-Time Data**:
+   - Dynamic invoice and line price calculation at build time, incorporating active tax rules and best eligible discounts [PDF 7.1, 7.3].
+   - Dynamic state transitions with instant audit log recording and status propagation [PDF 6.1, 9].
+   - Live KPI aggregation (MRR/ARR normalization) with Redis caching [PDF 10, 11].
+4. **Performance & Scalability**:
+   - Low latency budget: API p95 < 300 ms across all endpoints under 50,000 subscriptions and 500,000 invoices [PDF 1, 11].
+   - Efficient batch execution via PostgreSQL `FOR UPDATE SKIP LOCKED` preventing worker lock contention [PDF 7.2].
+   - Zero N+1 query patterns: mandatory eager loading of lines and foreign keys [PDF 11].
+5. **Security & Data Isolation**:
+   - 3-layer RBAC: route guards, object-level checks, and DB-level `customer_id` filtering on all portal routes [PDF 2].
+   - Passwords securely hashed using argon2id (or bcrypt cost 12); single-use 256-bit password reset tokens; rate limiting and account lockout [PDF 5.1, 9].
+6. **Debugging Skills & Observability**:
+   - Structured JSON logging with unique `request_id` propagation across every request and background job [PDF 15].
+   - Detailed observability for billing runs stored in `billing_runs` (`created_count`, `skipped_count`, `failed_count`, `error_summary`) [PDF 5.10, 7.2].
+   - Explicit domain exception hierarchy mapped to consistent HTTP status codes (400, 401, 403, 404, 409, 422, 500) [PDF 6.1, 8].
+
 ## 4. How to Run
 ```bash
 # Navigate to backend workspace

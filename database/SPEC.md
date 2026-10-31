@@ -2,11 +2,12 @@
 
 ## 1. Product Goal & Scope [PDF 1]
 - Provide a robust, highly optimized relational database architecture running the full subscription lifecycle: catalog -> quotation -> subscription -> invoice -> payment -> reporting [PDF 1].
+- **Hackathon High-Value Evaluation Focus**: The database design and setup is the most heavily scrutinized layer by the judges. It showcases schema normalization, strict relational typing, query optimization, dynamic data aggregation, and infrastructure setup automation.
 - Enforce foundational database guarantees:
   - **No double billing**: Hard database-level composite unique constraint `UNIQUE(subscription_id, period_start, period_end)` [PDF 1, 5.9, 7.2].
   - **Idempotent batch processing**: Efficient row-level locking via `FOR UPDATE SKIP LOCKED` on active subscriptions [PDF 7.2].
   - **Financial precision**: `NUMERIC(14,2)` on all monetary columns (never float) [PDF 5].
-  - **High-performance dashboard**: Summary tables (`daily_revenue_summary`, `subscription_snapshot_daily`) to keep reporting queries reading hundreds of rows instead of millions [PDF 11].
+  - **Real-time & dynamic summary tables**: `daily_revenue_summary` and `subscription_snapshot_daily` refreshed dynamically to ensure live dashboard queries read hundreds of rows instead of millions [PDF 11].
   - **Performance threshold**: Index design validated via `EXPLAIN ANALYZE` on 50,000 subscriptions and 500,000 invoices ensuring API p95 < 300 ms and page load < 2 s [PDF 1, 11].
 
 ---

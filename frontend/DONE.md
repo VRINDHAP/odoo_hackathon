@@ -67,3 +67,17 @@ All items must be satisfied and verified by Surya T S before frontend deliverabl
 - [ ] **Unit Tests**: Password validator, form validators, currency formatters, and MRR display helpers pass with > 80% coverage [PDF 15].
 - [ ] **E2E Test Flow**: Automated Cypress/Playwright test executes: Customer Signup -> Admin creates Plan -> Staff creates Quote -> Customer confirms -> Activation -> Invoice generated -> Payment recorded -> Dashboard updated [PDF 15].
 - [ ] **Lighthouse Performance Audit**: Performance score >= 90; Largest Contentful Paint (LCP) < 2.0s [PDF 11].
+
+---
+
+## 5. Hackathon Evaluation Rubric Checklist (Surya T S)
+- [ ] **Performance**: Fast page load (< 2s) verified; lazy loaded modules; virtualized tables for large dataset rendering [PDF 1, 11].
+- [ ] **Coding Standards**: Strict TypeScript type-safety; ESLint/Prettier clean; no `any` types; no hardcoded styling or magic strings [PDF 14].
+- [ ] **Logic**: Flawless client routing, state flow, line calculation sums, and button-gating based on plan flags [PDF 5.4, 6.1].
+- [ ] **Modularity & Architecture**: Clear folder separation (`features/`, `components/`, `api/`, `hooks/`, `utils/`); atomic, reusable UI components [PDF 14].
+- [ ] **Frontend Design**: Clean, interactive UI with consistent curated color tokens (`theme.css`), standardized semantic status chips, and uniform spacing/elevation [PDF 12].
+- [ ] **Scalability**: Handles thousands of items smoothly via virtualized scrolling and paginated queries [PDF 1, 11].
+- [ ] **Usability**: Real-time line item updates, live password rule feedback, skeleton loaders, debounced search, clear empty states, and inline validation [PDF 8, 11, 12].
+- [ ] **Security**: 3-layer RBAC route guards active; JWT token auto-refresh interceptor; no credentials or sensitive tokens in local storage or console logs [PDF 2, 9].
+- [ ] **Debugging Skills**: Clear client error handling; API validation errors mapped directly to form fields; zero uncaught exceptions in browser console [PDF 8].
+- [ ] **Database & Dynamic Data Alignment**: Integrates with PostgreSQL/MySQL relational API; dynamically recalculates and displays live state updates without page reloads [PDF 3, 7.1].

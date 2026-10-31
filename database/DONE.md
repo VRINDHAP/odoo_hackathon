@@ -48,3 +48,18 @@ Verify presence and usage of all design specification indexes via `pg_indexes`:
   - Realistic demo dataset script seeds superadmin, staff, products, plans, and active contracts [PDF 15].
   - Large-volume performance script successfully generates 50,000 subscriptions and 500,000 invoices [PDF 11, 15].
 - [ ] **Backup and Restore**: Automated test restore script completes successfully in CI, dumping and recreating database with 100% row count fidelity [PDF 15].
+
+---
+
+## 5. Hackathon Evaluation Rubric Checklist (Sooraj - Database Lead)
+> **HIGHEST WEIGHT AREA**: Evaluated directly by judges for schema rigor, scalability, and setup automation.
+
+- [ ] **Database Design Excellence (Highest Priority)**: Fully normalized 3NF schema; correct `NUMERIC(14,2)` data types for money; composite unique keys (`uq_subscription_period`, `uq_discount_invoice`) [PDF 5].
+- [ ] **Automated Setup & Dockerization**: `docker-compose up -d` brings up healthy Postgres 16, Redis, and PgBouncer containers with zero manual configuration [PDF 14].
+- [ ] **Performance & Indexing**: Index plan verified with `EXPLAIN ANALYZE`; sub-10ms queries verified on 50k subscriptions and 500k invoices; partial index on overdue invoices [PDF 5.11, 11].
+- [ ] **Real-Time & Dynamic Summary Tables**: `daily_revenue_summary` and `subscription_snapshot_daily` operational with refresh procedures [PDF 11].
+- [ ] **Migration Reliability**: Alembic migrations upgrade cleanly (`alembic upgrade head`) and roll back cleanly (`alembic downgrade -1`) with zero data corruption [PDF 14, 15].
+- [ ] **Scalability**: PgBouncer transaction pooling handles 500 concurrent connections; `FOR UPDATE SKIP LOCKED` verified for batch concurrency [PDF 7.2, 11].
+- [ ] **Security**: 100% of foreign keys indexed; `customer_id` lookups optimized for object-level tenancy isolation [PDF 2, 5.11].
+- [ ] **Modularity & Standards**: Clean SQL naming conventions, structured DDL scripts, explicit foreign key cascades/restrictions [PDF 5].
+- [ ] **Backup & Disaster Recovery**: Automated dump and restore test script verified in CI pipeline [PDF 15].

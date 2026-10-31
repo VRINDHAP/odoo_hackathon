@@ -104,3 +104,17 @@ All items must be satisfied and verified by Nandana and Vrindha before backend d
 - [ ] **Integration Tests**: Pass billing idempotency test, concurrent worker test, customer data isolation test, and RBAC endpoint sweep [PDF 15].
 - [ ] **E2E Test**: Automated test validates end-to-end lifecycle: Customer Signup -> Template -> Quotation -> Confirm -> Activate -> Bill -> Pay -> Report [PDF 15].
 - [ ] **Load Test**: Locust / k6 execution confirms p95 latency < 300 ms under 500 concurrent users against 50,000 subscriptions and 500,000 invoices [PDF 11, 15].
+
+---
+
+## 5. Hackathon Evaluation Rubric Checklist (Nandana & Vrindha)
+- [ ] **Performance**: API p95 < 300 ms verified under load test; zero N+1 queries; Redis caching on KPIs [PDF 1, 11].
+- [ ] **Coding Standards**: PEP 8 compliance, strict Python type annotations (`mypy`), Black formatting, modular layer separation [PDF 14].
+- [ ] **Logic**: Flawless financial math (line rounding half-up, discount evaluation, month-end date clamping, leap year math) [PDF 7.1, 7.2, 7.3].
+- [ ] **Modularity & Architecture**: Strict `router -> service -> repository -> model` layering; clean domain isolation between Nandana and Vrindha via typed contracts [PDF 3, 14].
+- [ ] **Robust Input Validation**: 100% of request bodies validated via Pydantic v2 schemas; uniform `{code, message, fields[]}` error responses [PDF 8].
+- [ ] **Scalability**: PostgreSQL `FOR UPDATE SKIP LOCKED` batching verified for concurrent worker execution without deadlock [PDF 7.2].
+- [ ] **Security**: 3-layer RBAC verified; customer tenant queries strictly isolated; argon2id hashing; account lockout on failed logins [PDF 2, 9].
+- [ ] **Debugging Skills & Observability**: Structured JSON logging with `request_id`; Sentry tracking; detailed `billing_runs` error summaries [PDF 5.10, 15].
+- [ ] **Dynamic & Real-Time Data**: Live calculation of invoice lines and taxes; real-time state machine audit emission [PDF 6.1, 7.1].
+- [ ] **Database & Relational Setup**: Flawless interaction with PostgreSQL 16+ / MySQL 8+ schema; zero MongoDB/Firebase dependencies [PDF 3, 5].

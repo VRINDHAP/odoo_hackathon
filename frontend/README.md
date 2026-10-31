@@ -21,7 +21,24 @@ This folder contains the complete technical specification, task breakdown, inter
   - Use internal simulated/sandbox payment flows via the backend `PaymentProvider` alongside standard gateway forms (ensuring full offline testability for hackathon judges without live merchant keys).
   - Do not use cloud-hosted PDF rendering APIs or external email SaaS widgets. All PDFs and transactional notifications are served directly through the internal backend.
 
-## 4. How to Run
+## 3.2 Hackathon Evaluation Criteria & Priorities (Surya T S)
+Judges heavily weight the following dimensions for frontend scoring:
+1. **Interactive, Clean UI & Consistent Color/Layout**:
+   - Centralized Design System tokens (`theme.css`): cohesive color palette (slate/indigo/neutral), consistent elevation shadows, uniform spacing units, and distinct semantic colors for status badges (`draft` = gray, `quotation` = amber, `confirmed` = blue, `active` = emerald, `paused` = orange, `closed` = purple, `cancelled` = red) [PDF 12].
+   - Predictable layouts: consistent header/sidebar navigation, standardized table padding, uniform button heights, and responsive drawer patterns [PDF 12].
+2. **Dynamic & Real-Time Data**:
+   - Real-time line item recalculation in Draft subscriptions (line subtotal, tax, and discount update dynamically on quantity/price changes) [PDF 7.1, 12].
+   - Live visual password strength checklist dynamically updating as the user types [PDF 8, 12].
+   - Dynamic progress indicators and polling for long-running operations (PDF generation, billing runs, and CSV exports) [PDF 11, 13].
+3. **Robust Client-Side Input Validation**:
+   - Zero unvalidated submissions: instant inline error messages under each field matching backend validation rules before network dispatch [PDF 8, 12].
+   - Defensive boundaries preventing impossible inputs (negative prices, quantities below plan minimum, overpayment amounts > balance) [PDF 5.4, 7.4, 16].
+4. **Modularity & Reusability**:
+   - Clear module boundaries: feature folders (`features/auth`, `features/subscriptions`, etc.) consuming shared atomic components (`components/tables`, `components/forms`, `components/chips`, `components/charts`) [PDF 14].
+5. **Usability & UX Polish**:
+   - Loading skeletons during network fetches to prevent layout shifts; debounced search inputs (300 ms); graceful empty states with call-to-actions; confirmation modals for destructive operations [PDF 11, 12].
+6. **Performance Budget**:
+   - Fast page load (< 2s) verified via code-splitting, route lazy loading, and table virtualization [PDF 1, 11].
 ```bash
 # Navigate to frontend workspace
 cd frontend

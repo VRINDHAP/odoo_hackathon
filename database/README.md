@@ -19,6 +19,29 @@ This folder contains the complete technical specification, schema definitions, m
 - **NoSQL / BaaS Strictly Forbidden**: MongoDB, Firebase (Firestore / Realtime DB), CouchDB, DynamoDB, or cloud BaaS platforms are completely prohibited. Multi-table financial invoicing requires atomic relational consistency that document databases cannot natively guarantee.
 - **Zero Heavy Cloud Dependencies**: All database containers (Postgres, Redis, PgBouncer) run locally via Docker Compose, eliminating any reliance on external cloud databases.
 
+## 3.2 Hackathon Evaluation Criteria & Highest Priorities (Sooraj - Database Lead)
+> **CRITICAL JUDGING NOTE**: Hackathon judges place the **highest evaluation weight** on database design, relational schema integrity, and setup excellence.
+
+Judges score the database layer across these key pillars:
+1. **Database Design & Schema Setup (Highest Weight)**:
+   - Proper normalization (3NF) across 15 relational tables with explicit primary keys and foreign keys [PDF 5].
+   - Exact numeric typing: `NUMERIC(14,2)` for financial fields, `NUMERIC(14,4)` for tax rates, zero floating-point arithmetic [PDF 5].
+   - Hard database constraints: `UNIQUE(subscription_id, period_start, period_end)` anti-double-billing guard, `UNIQUE(product_id, attribute, value)`, `UNIQUE(discount_id, invoice_id)` [PDF 5.3, 5.8, 5.9].
+   - 100% indexing on all foreign key columns [PDF 5].
+   - Clean Alembic migration scripts supporting forward (`alembic upgrade head`) and rollback (`alembic downgrade -1`) [PDF 14, 15].
+2. **Performance & Scalability**:
+   - Partial index optimization: `CREATE INDEX idx_invoices_overdue_partial ON invoices (status, due_date) WHERE status='confirmed' AND balance>0` [PDF 5.11].
+   - Composite indexes for batch scanning: `idx_subscriptions_status_billing_date` on `(status, next_billing_date)` [PDF 5.11].
+   - PgBouncer transaction-mode connection pooling supporting 500 concurrent connections [PDF 11].
+   - Benchmark proof: `EXPLAIN ANALYZE` scripts proving sub-10ms queries over 50,000 subscriptions and 500,000 invoices [PDF 11, 15].
+3. **Real-Time & Dynamic Data Optimization**:
+   - Summary tables (`daily_revenue_summary`, `subscription_snapshot_daily`) updated dynamically via stored procedures so dashboard aggregation reads hundreds of rows instead of scanning millions [PDF 11].
+4. **Robustness & Disaster Recovery**:
+   - Automated Docker Compose health checks and volume persistence [PDF 14].
+   - Validated backup and restore script with zero data loss [PDF 15].
+5. **Coding Standards & SQL Modularity**:
+   - Clean, standardized SQL DDL scripts, lowercase naming, explicit constraints, and comprehensive migration versioning [PDF 5, 14].
+
 ## 4. How to Run
 ```bash
 # Navigate to database workspace
