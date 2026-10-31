@@ -88,6 +88,16 @@ const OverdueAgingPage = lazy(() =>
     default: m.OverdueAgingPage,
   }))
 );
+const DashboardPage = lazy(() =>
+  import('../features/reports/DashboardPage').then((m) => ({
+    default: m.DashboardPage,
+  }))
+);
+const ReportsPage = lazy(() =>
+  import('../features/reports/ReportsPage').then((m) => ({
+    default: m.ReportsPage,
+  }))
+);
 
 const RootRedirect: React.FC = () => {
   const { user, isHydrating } = useAuth();
@@ -123,17 +133,7 @@ export const AppRoutes: React.FC = () => (
           </RouteGuard>
         }
       >
-        <Route
-          path="/dashboard"
-          element={
-            <ModuleStageCard
-              partNumber={6}
-              eyebrow="Executive Finance View"
-              title="Revenue & Subscription Dashboard"
-              summary="KPI mosaic (MRR, ARR, Active Subs, Overdue), revenue trend lines, and aging buckets."
-            />
-          }
-        />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/plans" element={<PlansPage />} />
         <Route path="/taxes" element={<TaxesPage />} />
@@ -154,17 +154,7 @@ export const AppRoutes: React.FC = () => (
         <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/overdue" element={<OverdueAgingPage />} />
-        <Route
-          path="/reports"
-          element={
-            <ModuleStageCard
-              partNumber={6}
-              eyebrow="Financial Intelligence"
-              title="Reports & CSV Exports"
-              summary="Active subscriptions, monthly revenue by plan/product, and downloadable CSV streams."
-            />
-          }
-        />
+        <Route path="/reports" element={<ReportsPage />} />
 
         {/* Phase 1 Completed Admin Modules */}
         <Route

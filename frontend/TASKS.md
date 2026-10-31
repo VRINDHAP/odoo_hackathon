@@ -158,19 +158,19 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 6: Reports & Finance Dashboard [PDF 17]
 
-- [ ] **FE-6.1**: Build Executive Finance Dashboard KPI summary grid [PDF 1, 10, 12].
+- [x] **FE-6.1**: Build Executive Finance Dashboard KPI summary grid [PDF 1, 10, 12].
   - **Input**: `GET /reports/summary`.
   - **Expected Output**: Grid of KPI cards: Active Subscriptions, MRR, ARR, Revenue Collected, Total Invoiced, Outstanding Amount, Overdue Count & Amount, New vs Closed Subscriptions.
   - **Acceptance Test**: MRR displays normalized monthly revenue; all currency figures right-aligned with currency code.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-6.2**: Build Financial Charts (Revenue Trend Line, Payments by Method, Aging Buckets) [PDF 10, 12].
+- [x] **FE-6.2**: Build Financial Charts (Revenue Trend Line, Payments by Method, Aging Buckets) [PDF 10, 12].
   - **Input**: `GET /reports/revenue`, `GET /reports/payments`.
   - **Expected Output**: Interactive line chart for monthly revenue trends and donut/bar chart for payment methods.
   - **Acceptance Test**: Hovering charts reveals exact values; date range filter updates charts seamlessly.
   - **Dependencies**: FE-6.1.
 
-- [ ] **FE-6.3**: Build Active Subscriptions and Revenue report tables with CSV export [PDF 8, 10, 12].
+- [x] **FE-6.3**: Build Active Subscriptions and Revenue report tables with CSV export [PDF 8, 10, 12].
   - **Input**: `GET /reports/active-subscriptions?format=csv`, `GET /reports/revenue?format=csv`.
   - **Expected Output**: Filterable data tables with sortable columns and direct CSV export download triggers.
   - **Acceptance Test**: Clicking CSV export downloads valid formatted CSV file.
