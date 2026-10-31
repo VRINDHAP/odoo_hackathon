@@ -91,26 +91,6 @@ docker compose exec backend python -m app.db.seed
 
 ---
 
-## Quality and Verification
-
-All code adheres to strict type checks, linting, and automated unit and integration tests:
-
-```bash
-# Type check (0 errors)
-npm --prefix frontend run typecheck
-
-# Code style and linting (0 warnings)
-npm --prefix frontend run lint
-
-# Comprehensive test suite (39 tests across 10 suites)
-npm --prefix frontend run test
-
-# Production bundle build
-npm --prefix frontend run build
-```
-
----
-
 ## Repository Governance
 
 - [Code of Conduct](CODE_OF_CONDUCT.md): Contributor Covenant v2.1
