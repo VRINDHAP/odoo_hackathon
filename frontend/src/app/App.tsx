@@ -35,6 +35,15 @@ const AuditLogPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('../features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
+const ProductsPage = lazy(() =>
+  import('../features/catalog/ProductsPage').then((m) => ({ default: m.ProductsPage }))
+);
+const PlansPage = lazy(() =>
+  import('../features/plans/PlansPage').then((m) => ({ default: m.PlansPage }))
+);
+const TaxesPage = lazy(() =>
+  import('../features/taxes/TaxesPage').then((m) => ({ default: m.TaxesPage }))
+);
 
 const RootRedirect: React.FC = () => {
   const { user, isHydrating } = useAuth();
@@ -81,39 +90,9 @@ export const AppRoutes: React.FC = () => (
             />
           }
         />
-        <Route
-          path="/products"
-          element={
-            <ModuleStageCard
-              partNumber={2}
-              eyebrow="Catalog Module"
-              title="Products & Variants"
-              summary="Manage software, service, addon, and physical SKUs with variant pricing and admin-only margins."
-            />
-          }
-        />
-        <Route
-          path="/plans"
-          element={
-            <ModuleStageCard
-              partNumber={2}
-              eyebrow="Billing Intervals & Flags"
-              title="Subscription Plans"
-              summary="Configure billing periods, minimum quantities, and pausable/closable/renewable behavior flags."
-            />
-          }
-        />
-        <Route
-          path="/taxes"
-          element={
-            <ModuleStageCard
-              partNumber={2}
-              eyebrow="Tax Engine"
-              title="Tax Rules"
-              summary="Inclusive and exclusive percentage/fixed tax schedules."
-            />
-          }
-        />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/plans" element={<PlansPage />} />
+        <Route path="/taxes" element={<TaxesPage />} />
         <Route
           path="/customers"
           element={
