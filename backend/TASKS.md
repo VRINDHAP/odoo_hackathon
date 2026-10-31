@@ -30,19 +30,19 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: Password shorter than 9 chars or lacking uppercase/lowercase/symbol fails with HTTP 422; 5th failed login sets `locked_until`.
   - **Dependencies**: BE-1.3.
 
-- [ ] **BE-1.5 [Nandana]**: Implement Forgot and Reset Password flow with anti-enumeration response [PDF 8, 9].
+- [x] **BE-1.5 [Nandana]**: Implement Forgot and Reset Password flow with anti-enumeration response [PDF 8, 9].
   - **Input**: `POST /auth/forgot-password`, `POST /auth/reset-password`.
   - **Expected Output**: 256-bit random reset token generated and hashed; constant response *"If the email exists, a link was sent"*.
   - **Acceptance Test**: Non-existent email returns 200 with constant response; valid reset updates password and revokes all refresh tokens.
   - **Dependencies**: BE-1.3.
 
-- [ ] **BE-1.6 [Nandana]**: Build Staff Creation endpoint with last-admin demotion guard [PDF 2, 8, 9].
+- [x] **BE-1.6 [Nandana]**: Build Staff Creation endpoint with last-admin demotion guard [PDF 2, 8, 9].
   - **Input**: `POST /users/staff`.
   - **Expected Output**: Admin-only staff provisioning endpoint; rule preventing deletion/demotion of last admin.
   - **Acceptance Test**: Staff or Customer calling `/users/staff` gets 403; demoting only remaining admin returns 400 Bad Request.
   - **Dependencies**: BE-1.3.
 
-- [ ] **BE-1.7 [Nandana]**: Implement Audit Logging interceptor for money-affecting entities [PDF 5.10, 9].
+- [x] **BE-1.7 [Nandana]**: Implement Audit Logging interceptor for money-affecting entities [PDF 5.10, 9].
   - **Input**: SQLAlchemy event listeners / service layer hook.
   - **Expected Output**: Automated insertion into `audit_logs` capturing `actor_id`, `entity`, `action`, `before_json`, `after_json`, `ip`, `at`.
   - **Acceptance Test**: Updating a product price or user role creates an immutable audit row with exact JSON diff.

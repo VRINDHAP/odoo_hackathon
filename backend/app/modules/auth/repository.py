@@ -110,3 +110,46 @@ class AuthRepository:
             RefreshToken.revoked_at.is_(None),
         ).update({"revoked_at": now})
         db.commit()
+
+    @staticmethod
+    def save_password_reset_token(
+        db: Session,
+        user_id: str,
+        token_hash: str,
+        expires_at: datetime,
+        requested_ip: Optional[str] = None,
+    ) -> PasswordResetToken:
+        """Persists a hashed password reset token (30-min lifespan) [PDF 5.1, 9]."""
+        reset_row = PasswordResetToken(
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            used_at=None,
+            requested_ip=requested_ip,
+        )
+        db.add(reset_row)
+        db.commit()
+        db.refresh(reset_row)
+        return reset_row
+
+    @staticmethod
+    def get_password_reset_token(db: Session, token_hash: str) -> Optional[PasswordResetToken]:
+        """Finds a password reset token by its SHA-256 hash."""
+        return db.query(PasswordResetToken).filter(PasswordResetToken.token_hash == token_hash).first()
+
+    @staticmethod
+    def mark_password_reset_token_used(db: Session, token_row: PasswordResetToken) -> None:
+        """Marks a password reset token as used (single-use) [PDF 9]."""
+        token_row.used_at = datetime.now(timezone.utc)
+        db.commit()
+
+    @staticmethod
+    def update_password(db: Session, user: User, new_password_hash: str) -> User:
+        """Updates user's password and resets failed attempt lockout counters [PDF 9]."""
+        user.password_hash = new_password_hash
+        user.failed_attempts = 0
+        user.locked_until = None
+        user.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(user)
+        return user
