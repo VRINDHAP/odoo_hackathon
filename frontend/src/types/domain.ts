@@ -338,6 +338,21 @@ export interface OverdueReportResponse {
   items: Invoice[];
 }
 
+export interface RevenueReportRow {
+  period: string;
+  plan_name: string;
+  product_name: string;
+  invoiced: string;
+  collected: string;
+  currency: string;
+}
+
+export interface PaymentsReportResponse {
+  currency: string;
+  total_collected: string;
+  by_method: Array<{ method: PaymentMethod; amount: string; count: number }>;
+}
+
 export interface DashboardSummary {
   currency: string;
   active_subscriptions: number;

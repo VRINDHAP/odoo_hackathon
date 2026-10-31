@@ -24,9 +24,11 @@ import type {
   PaginatedResponse,
   PaymentMethod,
   PaymentRecord,
+  PaymentsReportResponse,
   Plan,
   Product,
   QuotationTemplate,
+  RevenueReportRow,
   Subscription,
   SubscriptionLine,
   SubscriptionStatus,
@@ -2317,25 +2319,54 @@ export async function handleMockRequest(
   }
 
   if (path === '/reports/summary' && upperMethod === 'GET') {
+    const fromDate = query.get('from') ?? '';
+    const toDate = query.get('to') ?? '';
+    const rangeMonths = Number.parseInt(query.get('months') ?? '6', 10);
+
     const activeSubs = mockDb.subscriptions.filter((s) => s.status === 'active');
     const pausedSubs = mockDb.subscriptions.filter((s) => s.status === 'paused');
     const mrrNum = activeSubs.reduce((acc, s) => roundHalfUp(acc + normalizeToMonthlyMrr(s.total, s.billing_period)), 0);
     const arrNum = roundHalfUp(mrrNum * 12);
 
-    const nonCancelledInvoices = mockDb.invoices.filter((i) => i.status !== 'cancelled');
+    const nonCancelledInvoices = mockDb.invoices.filter((i) => {
+      if (i.status === 'cancelled') return false;
+      if (fromDate && i.issue_date < fromDate) return false;
+      if (toDate && i.issue_date > toDate) return false;
+      return true;
+    });
     const totalInvoiced = nonCancelledInvoices.reduce((acc, i) => roundHalfUp(acc + parseMoney(i.total)), 0);
-    const outstanding = nonCancelledInvoices.reduce((acc, i) => roundHalfUp(acc + parseMoney(i.balance)), 0);
+
+    const allOpenInvoices = mockDb.invoices.filter((i) => i.status !== 'cancelled');
+    const outstanding = allOpenInvoices.reduce((acc, i) => roundHalfUp(acc + parseMoney(i.balance)), 0);
     const overdueList = mockDb.invoices.filter((i) => isInvoiceOverdue(i));
     const overdueAmt = overdueList.reduce((acc, i) => roundHalfUp(acc + parseMoney(i.balance)), 0);
-    const collected = mockDb.payments.reduce((acc, p) => roundHalfUp(acc + parseMoney(p.amount)), 0);
+
+    const periodPayments = mockDb.payments.filter((p) => {
+      const day = p.payment_date.slice(0, 10);
+      if (fromDate && day < fromDate) return false;
+      if (toDate && day > toDate) return false;
+      return true;
+    });
+    const collected = periodPayments.reduce((acc, p) => roundHalfUp(acc + parseMoney(p.amount)), 0);
 
     const methodMap = new Map<PaymentMethod, { amount: number; count: number }>();
-    mockDb.payments.forEach((p) => {
+    periodPayments.forEach((p) => {
       const cur = methodMap.get(p.method) ?? { amount: 0, count: 0 };
       cur.amount = roundHalfUp(cur.amount + parseMoney(p.amount));
       cur.count += 1;
       methodMap.set(p.method, cur);
     });
+
+    const fullTrend = [
+      { month: 'May 26', invoiced: 98500, collected: 92000 },
+      { month: 'Jun 26', invoiced: 112400, collected: 108000 },
+      { month: 'Jul 26', invoiced: 128000, collected: 121500 },
+      { month: 'Aug 26', invoiced: 141200, collected: 102850 },
+      { month: 'Sep 26', invoiced: 158900, collected: 151200 },
+      { month: 'Oct 26', invoiced: 174600, collected: 148900 },
+    ];
+    const slicedTrend =
+      rangeMonths === 3 ? fullTrend.slice(-3) : rangeMonths === 12 ? fullTrend : fullTrend;
 
     const summary: DashboardSummary = {
       currency: mockDb.settings.currency,
@@ -2343,7 +2374,7 @@ export async function handleMockRequest(
       paused_subscriptions: pausedSubs.length,
       mrr: toFixedMoney(mrrNum),
       arr: toFixedMoney(arrNum),
-      revenue_collected: toFixedMoney(collected),
+      revenue_collected: toFixedMoney(Math.max(0, collected)),
       total_invoiced: toFixedMoney(totalInvoiced),
       outstanding_amount: toFixedMoney(outstanding),
       overdue_invoice_count: overdueList.length,
@@ -2355,40 +2386,100 @@ export async function handleMockRequest(
         amount: toFixedMoney(Math.max(0, v.amount)),
         count: v.count,
       })),
-      revenue_trend: [
-        { month: 'May', invoiced: 98500, collected: 92000 },
-        { month: 'Jun', invoiced: 112400, collected: 108000 },
-        { month: 'Jul', invoiced: 128000, collected: 121500 },
-        { month: 'Aug', invoiced: 141200, collected: 102850 },
-        { month: 'Sep', invoiced: 158900, collected: 151200 },
-        { month: 'Oct', invoiced: 174600, collected: 148900 },
-      ],
+      revenue_trend: slicedTrend,
       aging_buckets: computeDynamicAgingBuckets(overdueList),
     };
     return { status: 200, data: summary };
   }
 
+  if (path === '/reports/payments' && upperMethod === 'GET') {
+    const fromDate = query.get('from') ?? '';
+    const toDate = query.get('to') ?? '';
+    const filteredPayments = mockDb.payments.filter((p) => {
+      const day = p.payment_date.slice(0, 10);
+      if (fromDate && day < fromDate) return false;
+      if (toDate && day > toDate) return false;
+      return true;
+    });
+    const methodMap = new Map<PaymentMethod, { amount: number; count: number }>();
+    filteredPayments.forEach((p) => {
+      const cur = methodMap.get(p.method) ?? { amount: 0, count: 0 };
+      cur.amount = roundHalfUp(cur.amount + parseMoney(p.amount));
+      cur.count += 1;
+      methodMap.set(p.method, cur);
+    });
+    const totalCol = filteredPayments.reduce((acc, p) => roundHalfUp(acc + parseMoney(p.amount)), 0);
+    const res: PaymentsReportResponse = {
+      currency: mockDb.settings.currency,
+      total_collected: toFixedMoney(Math.max(0, totalCol)),
+      by_method: Array.from(methodMap.entries()).map(([m, v]) => ({
+        method: m,
+        amount: toFixedMoney(Math.max(0, v.amount)),
+        count: v.count,
+      })),
+    };
+    return { status: 200, data: res };
+  }
+
   if (path === '/reports/active-subscriptions' && upperMethod === 'GET') {
-    const active = mockDb.subscriptions.filter((s) => s.status === 'active');
+    const planId = query.get('plan_id') ?? '';
+    const customerId = query.get('customer_id') ?? '';
+    const statusFilter = query.get('status') ?? 'active';
+    const search = (query.get('search') ?? '').toLowerCase();
+    const fromDate = query.get('from') ?? '';
+    const toDate = query.get('to') ?? '';
+
+    const filteredSubs = mockDb.subscriptions.filter((s) => {
+      if (statusFilter !== 'all' && s.status !== statusFilter) return false;
+      if (planId && s.plan_id !== planId) return false;
+      if (customerId && s.customer_id !== customerId) return false;
+      if (fromDate && s.start_date && s.start_date < fromDate) return false;
+      if (toDate && s.start_date && s.start_date > toDate) return false;
+      if (search) {
+        const hay = `${s.number} ${s.customer_name} ${s.plan_name}`.toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
     if (query.get('format') === 'csv') {
       const csv = [
-        'Number,Customer,Plan,Period,Next Billing Date,Total,Currency',
-        ...active.map(
-          (s) => `"${s.number}","${s.customer_name}","${s.plan_name}","${s.billing_period}","${s.next_billing_date ?? ''}","${s.total}","${s.currency}"`
+        'Number,Customer,Plan,Period,Status,Start Date,Next Billing Date,Total,Currency',
+        ...filteredSubs.map(
+          (s) =>
+            `"${s.number}","${s.customer_name}","${s.plan_name}","${s.billing_period}","${s.status}","${s.start_date ?? ''}","${s.next_billing_date ?? ''}","${s.total}","${s.currency}"`
         ),
       ].join('\n');
       return { status: 200, blob: new Blob([csv], { type: 'text/csv;charset=utf-8;' }) };
     }
-    return { status: 200, data: active };
+    return { status: 200, data: filteredSubs };
   }
 
   if (path === '/reports/revenue' && upperMethod === 'GET') {
-    const rows = [
+    const planFilter = (query.get('plan_name') ?? '').toLowerCase();
+    const search = (query.get('search') ?? '').toLowerCase();
+    const fromPeriod = (query.get('from') ?? '').slice(0, 7);
+    const toPeriod = (query.get('to') ?? '').slice(0, 7);
+
+    const allRows: RevenueReportRow[] = [
       { period: '2026-10', plan_name: 'Growth Monthly', product_name: 'Brightloop Core ERP Suite', invoiced: '125600.00', collected: '82611.60', currency: mockDb.settings.currency },
       { period: '2026-09', plan_name: 'Growth Monthly', product_name: 'Brightloop Core ERP Suite', invoiced: '62988.40', collected: '62988.40', currency: mockDb.settings.currency },
       { period: '2026-08', plan_name: 'Growth Monthly', product_name: 'Smart POS Billing Terminal', invoiced: '38350.00', collected: '0.00', currency: mockDb.settings.currency },
+      { period: '2026-06', plan_name: 'Starter Weekly Ops', product_name: 'Automated Treasury & Recon Add-on', invoiced: '28400.00', collected: '28400.00', currency: mockDb.settings.currency },
       { period: '2026-03', plan_name: 'Enterprise Annual Commit', product_name: 'Brightloop Core ERP Suite', invoiced: '566400.00', collected: '566400.00', currency: mockDb.settings.currency },
     ];
+
+    const rows = allRows.filter((r) => {
+      if (planFilter && r.plan_name.toLowerCase() !== planFilter) return false;
+      if (fromPeriod && r.period < fromPeriod) return false;
+      if (toPeriod && r.period > toPeriod) return false;
+      if (search) {
+        const hay = `${r.period} ${r.plan_name} ${r.product_name}`.toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
     if (query.get('format') === 'csv') {
       const csv = [
         'Month,Plan,Product,Invoiced,Collected,Currency',
