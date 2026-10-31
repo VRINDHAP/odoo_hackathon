@@ -74,7 +74,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
 
 ## Phase 3: Sales (Customers, Quotation Templates, Subscriptions) [PDF 17]
 
-- [ ] **BE-3.1 [Nandana]**: Implement Customers model, repository, and CRUD endpoints [PDF 5.2, 8].
+- [x] **BE-3.1 [Nandana]**: Implement Customers model, repository, and CRUD endpoints [PDF 5.2, 8].
   - **Input**: `GET/POST /customers`, `GET/PATCH /customers/{id}`.
   - **Expected Output**: Customers module with billing address, tax ID, and soft delete (`deleted_at`).
   - **Acceptance Test**: Creating customer returns ID; soft deleting customer sets `deleted_at` without removing record.

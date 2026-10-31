@@ -37,6 +37,7 @@ from app.modules.audit.router import router as audit_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.plans.router import router as plans_router
 from app.modules.taxes.router import router as taxes_router
+from app.modules.customers.router import router as customers_router
 from app.modules.subscriptions.router import router as subscriptions_router
 from app.modules.discounts.router import router as discounts_router
 from app.modules.billing.router import router as billing_router
@@ -48,6 +49,7 @@ app.include_router(audit_router, prefix=settings.API_V1_STR)
 app.include_router(catalog_router, prefix=settings.API_V1_STR)
 app.include_router(plans_router, prefix=settings.API_V1_STR)
 app.include_router(taxes_router, prefix=settings.API_V1_STR)
+app.include_router(customers_router, prefix=settings.API_V1_STR)
 app.include_router(subscriptions_router, prefix=settings.API_V1_STR)
 app.include_router(discounts_router, prefix=settings.API_V1_STR)
 app.include_router(billing_router, prefix=settings.API_V1_STR)
