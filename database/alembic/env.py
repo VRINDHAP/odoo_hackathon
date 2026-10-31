@@ -26,9 +26,9 @@ database_url = URL.create(
     "postgresql+psycopg",
     username="brightloop_user",
     password=password,
-    host="127.0.0.1",
-    port=6432,
-    database="brightloop_db",
+    host=os.getenv("DATABASE_HOST", "127.0.0.1"),
+    port=int(os.getenv("DATABASE_PORT", "6432")),
+    database=os.getenv("DATABASE_NAME", "brightloop_db"),
 )
 
 target_metadata = None
