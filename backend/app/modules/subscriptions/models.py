@@ -34,16 +34,13 @@ from sqlalchemy.orm import relationship
 
 from app.core.db import Base
 
-# Ensure referenced foreign tables exist in Base.metadata for SQLite in-memory tests
-# when modules are loaded incrementally.
-for _table_name in ("customers", "plans", "products", "product_variants"):
-    if _table_name not in Base.metadata.tables:
-        Table(
-            _table_name,
-            Base.metadata,
-            Column("id", String(36), primary_key=True),
-            extend_existing=True,
-        )
+try:
+    from app.modules.customers.models import Customer  # noqa: F401
+    from app.modules.plans.models import Plan  # noqa: F401
+    from app.modules.catalog.models import Product, ProductVariant  # noqa: F401
+    from app.modules.taxes.models import Tax  # noqa: F401
+except ImportError:
+    pass
 
 
 class SubscriptionStatus(str, enum.Enum):
