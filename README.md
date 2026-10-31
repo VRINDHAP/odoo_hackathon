@@ -91,18 +91,6 @@ docker compose exec backend python -m app.db.seed
 
 ---
 
-## Demo Accounts
-
-The login screen provides one-click workspace access buttons for evaluation, or you can enter credentials manually:
-
-| Role | Email | Password | Access Scope |
-|---|---|---|---|
-| Administrator | admin@brightloop.io | Admin@2026! | Full CRUD, Margins, Discounts, Billing Run, Audit Log, Settings |
-| Internal Staff | nandana@brightloop.io | Staff@2026! | Quotations, Subscriptions, Invoices, Payments, Read-Only Catalog |
-| Customer | arjun@vervecloud.in | Customer@2026! | Customer Portal (/portal/*), Subscriptions, Invoices, Pay Now |
-
----
-
 ## Quality and Verification
 
 All code adheres to strict type checks, linting, and automated unit and integration tests:
