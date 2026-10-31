@@ -64,7 +64,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: Admin can create and update plan flags; non-admin cannot mutate plans.
   - **Dependencies**: BE-1.3.
 
-- [ ] **BE-2.3 [Nandana]**: Implement Taxes model and calculation service (inclusive & exclusive) [PDF 5.7, 7.1, 8].
+- [x] **BE-2.3 [Nandana]**: Implement Taxes model and calculation service (inclusive & exclusive) [PDF 5.7, 7.1, 8].
   - **Input**: `GET/POST/PATCH /taxes`.
   - **Expected Output**: Taxes module; service calculating `exclusive_tax = taxable * rate` and `inclusive_tax = taxable - taxable/(1+rate)`.
   - **Acceptance Test**: Unit test confirms exact tax amounts for 18% inclusive and exclusive on INR 1,000.
