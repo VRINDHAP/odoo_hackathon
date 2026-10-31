@@ -182,6 +182,13 @@ class Invoice(Base):
         lazy="selectin",
         order_by="InvoiceLine.id",
     )
+    payments = relationship(
+        "Payment",
+        back_populates="invoice",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="Payment.created_at",
+    )
 
     # Hard anti-double-billing constraint [PDF 1, 5.9, 7.2]
     __table_args__ = (
