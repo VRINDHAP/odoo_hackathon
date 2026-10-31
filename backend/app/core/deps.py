@@ -54,6 +54,34 @@ def get_current_user(
     return user
 
 
+def get_current_user_optional(
+    authorization: Optional[str] = Header(None, description="Bearer <JWT>"),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """
+    Optional authentication dependency [PDF 2].
+    Returns the User entity if a valid Bearer token is provided, otherwise None.
+    Does not raise UnauthorizedError when the Authorization header is omitted.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+
+    token = authorization.split(" ", 1)[1].strip()
+    try:
+        payload = decode_access_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.is_active:
+            return None
+
+        return user
+    except Exception:
+        return None
+
+
 def require_role(*allowed_roles: UserRole):
     """
     Dependency factory enforcing Role-Based Access Control (RBAC) [PDF 2].
