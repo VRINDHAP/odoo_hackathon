@@ -1,0 +1,305 @@
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { ToastProvider } from '../hooks/useToast';
+import { ModuleStageCard } from './ModuleStageCard';
+import { PortalLayout } from './PortalLayout';
+import { RouteGuard } from './RouteGuard';
+import { WorkspaceLayout } from './WorkspaceLayout';
+
+// Route-level code splitting (SPEC.md §11)
+const LoginPage = lazy(() =>
+  import('../features/auth/LoginPage').then((m) => ({ default: m.LoginPage }))
+);
+const SignupPage = lazy(() =>
+  import('../features/auth/SignupPage').then((m) => ({ default: m.SignupPage }))
+);
+const ForgotPasswordPage = lazy(() =>
+  import('../features/auth/ForgotResetPasswordPage').then((m) => ({
+    default: m.ForgotPasswordPage,
+  }))
+);
+const ResetPasswordPage = lazy(() =>
+  import('../features/auth/ForgotResetPasswordPage').then((m) => ({
+    default: m.ResetPasswordPage,
+  }))
+);
+const StaffManagementPage = lazy(() =>
+  import('../features/auth/StaffManagementPage').then((m) => ({
+    default: m.StaffManagementPage,
+  }))
+);
+const AuditLogPage = lazy(() =>
+  import('../features/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage }))
+);
+const SettingsPage = lazy(() =>
+  import('../features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
+
+const RootRedirect: React.FC = () => {
+  const { user, isHydrating } = useAuth();
+  if (isHydrating) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to={user.role === 'customer' ? '/portal/subscriptions' : '/dashboard'} replace />;
+};
+
+const PageLoader: React.FC = () => (
+  <div style={{ padding: 28 }}>
+    <div className="product-tile">
+      <div className="skeleton-line" style={{ width: '32%', marginBottom: 12 }} />
+      <div className="skeleton-line" style={{ width: '68%' }} />
+    </div>
+  </div>
+);
+
+export const AppRoutes: React.FC = () => (
+  <Suspense fallback={<PageLoader />}>
+    <Routes>
+      {/* Public Auth Routes */}
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      {/* Admin & Internal Staff Application */}
+      <Route
+        element={
+          <RouteGuard allowedRoles={['admin', 'staff']}>
+            <WorkspaceLayout />
+          </RouteGuard>
+        }
+      >
+        <Route
+          path="/dashboard"
+          element={
+            <ModuleStageCard
+              partNumber={6}
+              eyebrow="Executive Finance View"
+              title="Revenue & Subscription Dashboard"
+              summary="KPI mosaic (MRR, ARR, Active Subs, Overdue), revenue trend lines, and aging buckets."
+            />
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <ModuleStageCard
+              partNumber={2}
+              eyebrow="Catalog Module"
+              title="Products & Variants"
+              summary="Manage software, service, addon, and physical SKUs with variant pricing and admin-only margins."
+            />
+          }
+        />
+        <Route
+          path="/plans"
+          element={
+            <ModuleStageCard
+              partNumber={2}
+              eyebrow="Billing Intervals & Flags"
+              title="Subscription Plans"
+              summary="Configure billing periods, minimum quantities, and pausable/closable/renewable behavior flags."
+            />
+          }
+        />
+        <Route
+          path="/taxes"
+          element={
+            <ModuleStageCard
+              partNumber={2}
+              eyebrow="Tax Engine"
+              title="Tax Rules"
+              summary="Inclusive and exclusive percentage/fixed tax schedules."
+            />
+          }
+        />
+        <Route
+          path="/customers"
+          element={
+            <ModuleStageCard
+              partNumber={3}
+              eyebrow="CRM & Billing Profiles"
+              title="Customer Directory"
+              summary="Customer accounts, GST/Tax IDs, billing addresses, and linked subscriptions/invoices."
+            />
+          }
+        />
+        <Route
+          path="/quotation-templates"
+          element={
+            <ModuleStageCard
+              partNumber={3}
+              eyebrow="Rapid Sales"
+              title="Quotation Templates"
+              summary="Reusable product bundles with one-click draft quotation creation."
+            />
+          }
+        />
+        <Route
+          path="/subscriptions"
+          element={
+            <ModuleStageCard
+              partNumber={3}
+              eyebrow="Recurring Contracts"
+              title="Subscriptions Lifecycle"
+              summary="Draft -> Quotation -> Confirmed -> Active -> Closed stepper with live Draft line pricing."
+            />
+          }
+        />
+        <Route
+          path="/discounts"
+          element={
+            <RouteGuard allowedRoles={['admin']}>
+              <ModuleStageCard
+                partNumber={4}
+                eyebrow="Promotions · Admin Only"
+                title="Discount Rules & Redemptions"
+                summary="Percentage and fixed discount rules with usage limits and live redemption counters."
+              />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/invoices"
+          element={
+            <ModuleStageCard
+              partNumber={4}
+              eyebrow="Accounts Receivable"
+              title="Invoices & PDF Documents"
+              summary="Confirm, send, print, and download native PDF invoices with automatic overdue detection."
+            />
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <ModuleStageCard
+              partNumber={5}
+              eyebrow="Cash Settlement"
+              title="Payments Register"
+              summary="Append-only payment ledger, idempotent payment drawer, reversals, and CSV exports."
+            />
+          }
+        />
+        <Route
+          path="/overdue"
+          element={
+            <ModuleStageCard
+              partNumber={5}
+              eyebrow="Collections & Dunning"
+              title="Outstanding & Overdue Aging"
+              summary="0-30, 31-60, 61-90, and 90+ day aging buckets with one-click dunning reminders."
+            />
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ModuleStageCard
+              partNumber={6}
+              eyebrow="Financial Intelligence"
+              title="Reports & CSV Exports"
+              summary="Active subscriptions, monthly revenue by plan/product, and downloadable CSV streams."
+            />
+          }
+        />
+
+        {/* Phase 1 Completed Admin Modules */}
+        <Route
+          path="/staff"
+          element={
+            <RouteGuard allowedRoles={['admin']}>
+              <StaffManagementPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/audit-logs"
+          element={
+            <RouteGuard allowedRoles={['admin']}>
+              <AuditLogPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RouteGuard allowedRoles={['admin']}>
+              <SettingsPage />
+            </RouteGuard>
+          }
+        />
+      </Route>
+
+      {/* Customer Self-Service Portal (/portal/* -> /me/*) */}
+      <Route
+        path="/portal"
+        element={
+          <RouteGuard allowedRoles={['customer']}>
+            <PortalLayout />
+          </RouteGuard>
+        }
+      >
+        <Route index element={<Navigate to="/portal/subscriptions" replace />} />
+        <Route
+          path="subscriptions"
+          element={
+            <ModuleStageCard
+              partNumber={7}
+              eyebrow="Customer Portal"
+              title="My Subscriptions"
+              summary="View your active plan, upcoming renewal date, and request upgrades or pauses."
+            />
+          }
+        />
+        <Route
+          path="invoices"
+          element={
+            <ModuleStageCard
+              partNumber={7}
+              eyebrow="Customer Portal"
+              title="My Invoices"
+              summary="Download tax invoice PDFs and settle balances via online sandbox checkout."
+            />
+          }
+        />
+        <Route
+          path="payments"
+          element={
+            <ModuleStageCard
+              partNumber={7}
+              eyebrow="Customer Portal"
+              title="Payment History"
+              summary="Browse completed payment receipts and settlement references."
+            />
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <ModuleStageCard
+              partNumber={7}
+              eyebrow="Customer Portal"
+              title="Profile & Billing Address"
+              summary="Update your organization billing address and portal account password."
+            />
+          }
+        />
+      </Route>
+
+      <Route path="*" element={<RootRedirect />} />
+    </Routes>
+  </Suspense>
+);
+
+export const App: React.FC = () => (
+  <BrowserRouter>
+    <ToastProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ToastProvider>
+  </BrowserRouter>
+);
+

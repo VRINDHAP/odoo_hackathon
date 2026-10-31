@@ -6,43 +6,43 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. All 
 
 ## Phase 1: Foundation (Auth, Roles, Password Reset, Staff Creation, Audit) [PDF 17]
 
-- [ ] **FE-1.1**: Initialize React Vite application with TypeScript, routing skeleton, and vanilla CSS design system tokens (`theme.css`).
+- [x] **FE-1.1**: Initialize React Vite application with TypeScript, routing skeleton, and vanilla CSS design system tokens (`theme.css`).
   - **Input**: Vite React template, curated color tokens (Slate/Blue/Emerald/Amber/Rose status chips), elevation, typography, and spacing variables.
   - **Expected Output**: Running SPA dev server with clean visual theme, consistent layout grid, responsive navbar/sidebar, and interactive button/card primitives.
   - **Acceptance Test**: App loads with zero console errors; CSS variables consistently style all primitives across viewports.
   - **Dependencies**: None.
 
-- [ ] **FE-1.2**: Implement API client with JWT storage, Bearer auth header injection, and 401 token refresh interceptor [PDF 3, 8, 9].
+- [x] **FE-1.2**: Implement API client with JWT storage, Bearer auth header injection, and 401 token refresh interceptor [PDF 3, 8, 9].
   - **Input**: Axios/Fetch configuration and endpoints `POST /auth/refresh`, `POST /auth/login`.
   - **Expected Output**: Reusable HTTP client module that automatically handles token rotation.
   - **Acceptance Test**: Expired access token triggers silent refresh; invalid refresh redirects to `/login`.
   - **Dependencies**: FE-1.1.
 
-- [ ] **FE-1.3**: Build route guards and role-based navigation layout for Admin, Staff, and Customer [PDF 2, 12, 14].
+- [x] **FE-1.3**: Build route guards and role-based navigation layout for Admin, Staff, and Customer [PDF 2, 12, 14].
   - **Input**: User auth state containing `role` enum (`admin`, `staff`, `customer`).
   - **Expected Output**: Guarded route wrapper restricting unauthorized routes; responsive sidebar/navbar.
   - **Acceptance Test**: Customer accessing `/settings` is redirected; Admin sees full menu; Staff sees operational menu.
   - **Dependencies**: FE-1.2.
 
-- [ ] **FE-1.4**: Build Login and Forgot/Reset Password screens with no-enumeration UX [PDF 8, 9, 12].
+- [x] **FE-1.4**: Build Login and Forgot/Reset Password screens with no-enumeration UX [PDF 8, 9, 12].
   - **Input**: Form inputs for email, password; reset token parameter from URL.
   - **Expected Output**: Functional login form and forgot password page displaying constant message: *"If the email exists, a link was sent"*.
   - **Acceptance Test**: Successful login stores JWT and navigates to dashboard; forgot password displays exact notification.
   - **Dependencies**: FE-1.2.
 
-- [ ] **FE-1.5**: Build Public Signup screen with live password-rule checklist and regex validation [PDF 8, 9, 12].
+- [x] **FE-1.5**: Build Public Signup screen with live password-rule checklist and regex validation [PDF 8, 9, 12].
   - **Input**: Name, email, company, password inputs; Regex `^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$`.
   - **Expected Output**: Form with interactive checklist ticking off length > 8, lowercase, uppercase, and special character.
   - **Acceptance Test**: Submit button disabled until all checklist items green; HTTP 409 displays "Email already taken".
   - **Dependencies**: FE-1.2.
 
-- [ ] **FE-1.6**: Build Staff Management and Staff Creation modal (Admin only) [PDF 2, 8, 12].
+- [x] **FE-1.6**: Build Staff Management and Staff Creation modal (Admin only) [PDF 2, 8, 12].
   - **Input**: Staff email, role selector, `POST /users/staff`.
   - **Expected Output**: Staff directory table with invite/create staff modal.
   - **Acceptance Test**: Form submits to `/users/staff`; visible only to Admin users.
   - **Dependencies**: FE-1.3.
 
-- [ ] **FE-1.7**: Build Audit Log viewer screen with JSON diff viewer (Admin only) [PDF 2, 5.10, 12].
+- [x] **FE-1.7**: Build Audit Log viewer screen with JSON diff viewer (Admin only) [PDF 2, 5.10, 12].
   - **Input**: `GET /api/v1/audit_logs` (or backend audit endpoint) with pagination.
   - **Expected Output**: Searchable audit table with expandable before/after JSON diff viewer.
   - **Acceptance Test**: Log entries render actor, entity, action, timestamp, and visual before/after changes.
