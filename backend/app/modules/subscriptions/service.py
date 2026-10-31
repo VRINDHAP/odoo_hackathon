@@ -24,12 +24,17 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union
 import uuid
 
-from sqlalchemy import Column, DateTime, Integer, JSON, String, Table, desc, func, text
+from sqlalchemy import desc, func, text
 from sqlalchemy.orm import Session
 
 from app.core.db import Base
 from app.core.errors import NotFoundError
 from app.modules.auth.models import UserRole
+try:
+    from app.modules.audit.models import AuditLog
+except ImportError:
+    AuditLog = None
+
 from app.modules.subscriptions.exceptions import (
     InvalidStateTransitionException,
     PlanPolicyViolationException,
@@ -51,23 +56,6 @@ from app.modules.subscriptions.utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-# Register audit_logs in metadata if not yet created by database migrations
-if "audit_logs" not in Base.metadata.tables:
-    Table(
-        "audit_logs",
-        Base.metadata,
-        Column("id", String(36), primary_key=True, default=lambda: str(uuid.uuid4())),
-        Column("actor_id", String(36), nullable=True),
-        Column("entity", String(50), nullable=False),
-        Column("entity_id", String(36), nullable=False),
-        Column("action", String(50), nullable=False),
-        Column("before_json", JSON, nullable=True),
-        Column("after_json", JSON, nullable=True),
-        Column("ip", String(45), nullable=True),
-        Column("at", DateTime(timezone=True), default=datetime.utcnow),
-        extend_existing=True,
-    )
 
 
 # ============================================================================
@@ -144,10 +132,9 @@ def record_transition_audit(
     """
     Records an immutable audit event for subscription state transitions [PDF 5.10, 6.1].
     """
-    audit_table = Base.metadata.tables.get("audit_logs")
-    if audit_table is not None:
+    if AuditLog is not None:
         try:
-            stmt = audit_table.insert().values(
+            entry = AuditLog(
                 id=str(uuid.uuid4()),
                 actor_id=str(actor_id) if actor_id else None,
                 entity="subscription",
@@ -157,7 +144,7 @@ def record_transition_audit(
                 after_json={"status": after_status, "reason": reason},
                 at=datetime.utcnow(),
             )
-            db.execute(stmt)
+            db.add(entry)
         except Exception as e:
             logger.warning(f"Could not persist audit log to DB: {e}")
 
