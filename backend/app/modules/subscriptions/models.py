@@ -242,6 +242,7 @@ class Subscription(Base):
     __table_args__ = (
         Index("idx_subscriptions_status_billing_date", "status", "next_billing_date"),
         Index("idx_subscriptions_customer_status", "customer_id", "status"),
+        {"extend_existing": True},
     )
 
     # Convenience Property Aliases for full specification interoperability
@@ -397,6 +398,7 @@ class SubscriptionLine(Base):
         "Subscription",
         back_populates="lines",
     )
+    __table_args__ = {"extend_existing": True}
 
     # Convenience Property Aliases
     @property
