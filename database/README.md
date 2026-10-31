@@ -43,7 +43,22 @@ Judges score the database layer across these key pillars:
    - Clean, standardized SQL DDL scripts, lowercase naming, explicit constraints, and comprehensive migration versioning [PDF 5, 14].
 
 ## 4. How to Run
+
+### Prerequisites
+- Docker Engine
+- Docker Compose plugin
+
+### 4.1 Initial Setup
+
 ```bash
+# Navigate to database workspace
+cd database
+
+# Create local environment configuration
+cp .env.example .env
+
+# Create PgBouncer credentials file
+cp pgbouncer/userlist.example.txt pgbouncer/userlist.txt
 # Navigate to database workspace
 cd database
 

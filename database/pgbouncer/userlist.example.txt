@@ -1,0 +1,1 @@
+"brightloop_user" "replace_with_the_same_password_as_POSTGRES_PASSWORD"
