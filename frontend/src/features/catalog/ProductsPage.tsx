@@ -425,29 +425,14 @@ export const ProductsPage: React.FC = () => {
         isLoading={isLoading}
         toolbar={
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', flex: 1 }}>
-              <input
-                type="search"
-                className="form-input"
-                placeholder="Search products or notes…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ maxWidth: 300 }}
-              />
-              <select
-                className="form-select"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                style={{ maxWidth: 180 }}
-                aria-label="Filter by product type"
-              >
-                <option value="">All Product Types</option>
-                <option value="software">Software</option>
-                <option value="service">Service</option>
-                <option value="addon">Add-on</option>
-                <option value="physical">Physical</option>
-              </select>
-            </div>
+            <input
+              type="search"
+              className="form-input"
+              placeholder="Search products or notes…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ maxWidth: 320 }}
+            />
             <span className="type-caption">{filteredProducts.length} catalog items</span>
           </div>
         }
@@ -482,7 +467,7 @@ export const ProductsPage: React.FC = () => {
         <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <FormInput
             label="Product Name"
-            placeholder="SSVN Systems Core ERP Suite"
+            placeholder="Brightloop Core ERP Suite"
             value={name}
             onChange={(e) => setName(e.target.value)}
             error={formErrors.name}

@@ -11,14 +11,11 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { getApiDataSourceMode } from '../api/client';
 import { emitManualRefresh } from '../api/realtimeBus';
-import { StatusChip } from '../components/chips/StatusChip';
 import { Button } from '../components/forms/Primitives';
 import { useAuth } from '../hooks/useAuth';
 
 /**
- * SPEC.md §9 & §12.3:
  * Customer Portal Shell — strictly isolated to /portal/* routes consuming /me/* endpoints.
  */
 export const PortalLayout: React.FC = () => {
@@ -27,10 +24,10 @@ export const PortalLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const links = [
-    { to: '/portal/subscriptions', label: 'My Subscriptions', icon: Layers },
-    { to: '/portal/invoices', label: 'My Invoices', icon: FileText },
-    { to: '/portal/payments', label: 'Payment History', icon: CreditCard },
-    { to: '/portal/profile', label: 'Profile & Password', icon: UserCircle2 },
+    { to: '/portal/subscriptions', label: 'Subscriptions', icon: Layers },
+    { to: '/portal/invoices', label: 'Invoices', icon: FileText },
+    { to: '/portal/payments', label: 'Payments', icon: CreditCard },
+    { to: '/portal/profile', label: 'Profile', icon: UserCircle2 },
   ];
 
   const userInitials = (user?.name ?? user?.email ?? 'CU')
@@ -63,7 +60,10 @@ export const PortalLayout: React.FC = () => {
               <span className="brand-bolt">
                 <Zap size={14} />
               </span>
-              <span>SSVN Systems Portal</span>
+              <span>Brightloop</span>
+              <span className="type-caption" style={{ fontSize: 12, marginLeft: -2 }}>
+                Portal
+              </span>
             </div>
           </div>
 
@@ -94,18 +94,12 @@ export const PortalLayout: React.FC = () => {
             type="button"
             className="btn btn-outline"
             onClick={() => emitManualRefresh()}
-            title="Sync live portal account data"
+            title="Refresh portal data"
             aria-label="Sync portal data"
-            style={{ padding: '7px 10px' }}
+            style={{ padding: '7px 9px' }}
           >
             <RefreshCw size={14} />
           </button>
-          <span className="desktop-only">
-            <StatusChip
-              status={getApiDataSourceMode() === 'live' ? 'Live Portal' : 'Customer Portal'}
-              variant={getApiDataSourceMode() === 'live' ? 'active' : 'neutral'}
-            />
-          </span>
           <div
             className="desktop-only"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 4px' }}

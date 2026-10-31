@@ -41,40 +41,47 @@ export const InvoicesPage: React.FC = () => {
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const loadInvoices = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const qs = new URLSearchParams({
-        page: String(page),
-        page_size: '25',
-      });
-      if (debouncedSearch) qs.set('search', debouncedSearch);
-      if (statusFilter) qs.set('status', statusFilter);
-      if (customerFilter) qs.set('customer_id', customerFilter);
-      if (overdueOnly) qs.set('overdue', 'true');
+  const loadInvoices = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const qs = new URLSearchParams({
+          page: String(page),
+          page_size: '25',
+        });
+        if (debouncedSearch) qs.set('search', debouncedSearch);
+        if (statusFilter) qs.set('status', statusFilter);
+        if (customerFilter) qs.set('customer_id', customerFilter);
+        if (overdueOnly) qs.set('overdue', 'true');
 
-      const [invRes, custRes, settings] = await Promise.all([
-        apiRequest<PaginatedResponse<Invoice>>(`/invoices?${qs.toString()}`),
-        apiRequest<PaginatedResponse<Customer>>('/customers?page=1&page_size=100'),
-        apiRequest<SystemSettings>('/settings'),
-      ]);
-      setInvoices(invRes.items);
-      setTotalPages(invRes.total_pages);
-      setTotal(invRes.total);
-      setCustomers(custRes.items);
-      setCurrency(settings.currency);
-    } catch {
-      showToast('Failed to load invoices', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [customerFilter, debouncedSearch, overdueOnly, page, showToast, statusFilter]);
+        const [invRes, custRes, settings] = await Promise.all([
+          apiRequest<PaginatedResponse<Invoice>>(`/invoices?${qs.toString()}`),
+          apiRequest<PaginatedResponse<Customer>>('/customers?page=1&page_size=100'),
+          apiRequest<SystemSettings>('/settings'),
+        ]);
+        setInvoices(invRes.items);
+        setTotalPages(invRes.total_pages);
+        setTotal(invRes.total);
+        setCustomers(custRes.items);
+        setCurrency(settings.currency);
+      } catch {
+        if (!silent) showToast('Failed to load invoices', 'error');
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [customerFilter, debouncedSearch, overdueOnly, page, showToast, statusFilter]
+  );
 
   useEffect(() => {
-    void loadInvoices();
+    void loadInvoices(false);
   }, [loadInvoices]);
 
-  useRealtimeSync(loadInvoices, { pollIntervalMs: 30000 });
+  const syncInvoicesSilently = useCallback(() => {
+    void loadInvoices(true);
+  }, [loadInvoices]);
+
+  useRealtimeSync(syncInvoicesSilently, { pollIntervalMs: 30000 });
 
   // SPEC.md §1 & §5.9: Paid, Outstanding, and Overdue amounts always visible
   const ledgerRollup = useMemo(() => {

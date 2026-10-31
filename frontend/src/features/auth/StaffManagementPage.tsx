@@ -255,7 +255,7 @@ export const StaffManagementPage: React.FC = () => {
       <Modal
         isOpen={isInviteOpen}
         title="Provision Internal Staff Account"
-        eyebrow="POST /api/v1/users/staff"
+        eyebrow="Team Access"
         onClose={() => setIsInviteOpen(false)}
         footer={
           <>
@@ -279,7 +279,7 @@ export const StaffManagementPage: React.FC = () => {
           <FormInput
             label="Work Email"
             type="email"
-            placeholder="sooraj@ssvnsystems.com"
+            placeholder="sooraj@brightloop.io"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             error={inviteErrors.email}

@@ -114,40 +114,47 @@ export const SubscriptionsPage: React.FC = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const loadSubscriptions = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const qs = new URLSearchParams({
-        page: String(page),
-        page_size: '25',
-      });
-      if (debouncedSearch) qs.set('search', debouncedSearch);
-      if (statusFilter) qs.set('status', statusFilter);
-      if (customerFilter) qs.set('customer_id', customerFilter);
-      if (planFilter) qs.set('plan_id', planFilter);
+  const loadSubscriptions = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const qs = new URLSearchParams({
+          page: String(page),
+          page_size: '25',
+        });
+        if (debouncedSearch) qs.set('search', debouncedSearch);
+        if (statusFilter) qs.set('status', statusFilter);
+        if (customerFilter) qs.set('customer_id', customerFilter);
+        if (planFilter) qs.set('plan_id', planFilter);
 
-      const res = await apiRequest<PaginatedResponse<Subscription>>(
-        `/subscriptions?${qs.toString()}`
-      );
-      setSubscriptions(res.items);
-      setTotalPages(res.total_pages);
-      setTotal(res.total);
-    } catch {
-      showToast('Failed to load subscriptions', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [customerFilter, debouncedSearch, page, planFilter, showToast, statusFilter]);
+        const res = await apiRequest<PaginatedResponse<Subscription>>(
+          `/subscriptions?${qs.toString()}`
+        );
+        setSubscriptions(res.items);
+        setTotalPages(res.total_pages);
+        setTotal(res.total);
+      } catch {
+        if (!silent) showToast('Failed to load subscriptions', 'error');
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [customerFilter, debouncedSearch, page, planFilter, showToast, statusFilter]
+  );
 
   useEffect(() => {
     void loadReferenceData();
   }, [loadReferenceData]);
 
   useEffect(() => {
-    void loadSubscriptions();
+    void loadSubscriptions(false);
   }, [loadSubscriptions]);
 
-  useRealtimeSync(loadSubscriptions, { pollIntervalMs: 30000 });
+  const syncSubscriptionsSilently = useCallback(() => {
+    void loadSubscriptions(true);
+  }, [loadSubscriptions]);
+
+  useRealtimeSync(syncSubscriptionsSilently, { pollIntervalMs: 30000 });
 
   const selectedPlan = plans.find((p) => p.id === newPlanId);
   const selectedProduct = products.find((p) => p.id === newProductId);

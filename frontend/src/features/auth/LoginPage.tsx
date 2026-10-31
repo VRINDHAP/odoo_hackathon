@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Lock, ShieldCheck, Zap } from 'lucide-react';
+import { Lock, Zap } from 'lucide-react';
 import { ApiClientError } from '../../api/client';
 import { Button, FormInput } from '../../components/forms/Primitives';
 import { useAuth } from '../../hooks/useAuth';
@@ -16,7 +16,6 @@ export const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [bannerError, setBannerError] = useState<{ code: string; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,26 +68,32 @@ export const LoginPage: React.FC = () => {
       <AuthEditorialPanel />
 
       <main className="auth-form-column">
-        <div className="product-tile" style={{ maxWidth: 440, width: '100%', margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <span className="eyebrow-cap">Workspace Sign In</span>
-            <span className="brand-bolt" title="SSVN Systems">
+        <div className="product-tile" style={{ maxWidth: 420, width: '100%', margin: '0 auto', padding: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div className="brand-mark mobile-only" style={{ fontSize: 16 }}>
+              <span className="brand-bolt" title="Brightloop">
+                <Zap size={13} />
+              </span>
+              <span>Brightloop</span>
+            </div>
+            <span className="eyebrow-cap">Workspace Access</span>
+            <span className="brand-bolt desktop-only" title="Brightloop">
               <Zap size={13} />
             </span>
           </div>
 
-          <h2 className="type-display-md" style={{ marginBottom: 6 }}>
-            Welcome back
+          <h2 className="type-display-md" style={{ marginBottom: 4 }}>
+            Sign in
           </h2>
-          <p className="type-caption" style={{ marginBottom: 24 }}>
-            Sign in with your SSVN Systems credentials to access your role workspace.
+          <p className="type-caption" style={{ marginBottom: 22 }}>
+            Continue with your Brightloop credentials or launch a demo workspace.
           </p>
 
           {bannerError ? (
             <div
               role="alert"
               style={{
-                padding: '12px 14px',
+                padding: '11px 14px',
                 borderRadius: 'var(--rounded-md)',
                 backgroundColor: 'var(--chip-cancelled-bg)',
                 border: '1px solid var(--chip-cancelled-border)',
@@ -100,21 +105,21 @@ export const LoginPage: React.FC = () => {
                 fontSize: 13,
               }}
             >
-              <Lock size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+              <Lock size={15} style={{ flexShrink: 0, marginTop: 2 }} />
               <div>
                 {bannerError.code === 'ACCOUNT_LOCKED' ? (
-                  <div style={{ marginBottom: 2 }}>Account Locked (HTTP 423)</div>
+                  <div style={{ marginBottom: 2 }}>Account Locked</div>
                 ) : null}
                 <span>{bannerError.message}</span>
               </div>
             </div>
           ) : null}
 
-          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <FormInput
               label="Work Email"
               type="email"
-              placeholder="you@company.com"
+              placeholder="you@brightloop.io"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => {
@@ -135,7 +140,7 @@ export const LoginPage: React.FC = () => {
             <FormInput
               label="Password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}
@@ -147,48 +152,40 @@ export const LoginPage: React.FC = () => {
               }
             />
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <span>Keep session active</span>
-              </label>
-
-              <Button type="submit" variant="primary" isLoading={isSubmitting}>
-                Sign in →
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting}
+              style={{ width: '100%', padding: '10px 16px', marginTop: 4 }}
+            >
+              Sign in →
+            </Button>
           </form>
 
-          {/* Instant Role Sandbox Switcher for Hackathon Evaluation */}
+          {/* 1-Click Demo Workspaces */}
           <div
             style={{
-              marginTop: 24,
+              marginTop: 22,
               paddingTop: 18,
               borderTop: '1px solid var(--color-hairline)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 8,
+              gap: 10,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <ShieldCheck size={13} color="var(--color-ink-mute)" />
-              <span className="eyebrow-cap" style={{ lineHeight: '16px' }}>
-                Quick RBAC Demo Sign-In
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <span className="eyebrow-cap" style={{ lineHeight: '14px' }}>
+              Demo Workspaces
+            </span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
               <Button
                 type="button"
                 variant="sand"
                 disabled={isSubmitting}
+                style={{ fontSize: 12, padding: '8px 6px' }}
                 onClick={() => {
-                  setEmail('admin@ssvnsystems.com');
+                  setEmail('admin@brightloop.io');
                   setPassword('Admin@2026!');
-                  void performLogin('admin@ssvnsystems.com', 'Admin@2026!');
+                  void performLogin('admin@brightloop.io', 'Admin@2026!');
                 }}
               >
                 Admin (Full)
@@ -197,10 +194,11 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 variant="sand"
                 disabled={isSubmitting}
+                style={{ fontSize: 12, padding: '8px 6px' }}
                 onClick={() => {
-                  setEmail('nandana@ssvnsystems.com');
+                  setEmail('nandana@brightloop.io');
                   setPassword('Staff@2026!');
-                  void performLogin('nandana@ssvnsystems.com', 'Staff@2026!');
+                  void performLogin('nandana@brightloop.io', 'Staff@2026!');
                 }}
               >
                 Internal Staff
@@ -209,6 +207,7 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 variant="sand"
                 disabled={isSubmitting}
+                style={{ fontSize: 12, padding: '8px 6px' }}
                 onClick={() => {
                   setEmail('arjun@vervecloud.in');
                   setPassword('Customer@2026!');
@@ -220,8 +219,8 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ marginTop: 20, fontSize: 13, color: 'var(--color-ink-mute)' }}>
-            New customer organization?{' '}
+          <div style={{ marginTop: 18, fontSize: 13, color: 'var(--color-ink-mute)', textAlign: 'center' }}>
+            New customer?{' '}
             <Link to="/signup" style={{ color: 'var(--color-ink)', textDecoration: 'underline' }}>
               Create a portal account
             </Link>
@@ -231,4 +230,3 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
-

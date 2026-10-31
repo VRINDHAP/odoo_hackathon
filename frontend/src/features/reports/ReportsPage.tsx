@@ -160,7 +160,7 @@ export const ReportsPage: React.FC = () => {
       );
       downloadBlobFile(
         blob,
-        `ssvn-systems-active-subscriptions-${new Date().toISOString().slice(0, 10)}.csv`
+        `brightloop-active-subscriptions-${new Date().toISOString().slice(0, 10)}.csv`
       );
       showToast('Active subscriptions CSV downloaded.', 'success');
     } catch (err) {
@@ -178,7 +178,7 @@ export const ReportsPage: React.FC = () => {
       });
       downloadBlobFile(
         blob,
-        `ssvn-systems-monthly-revenue-${new Date().toISOString().slice(0, 10)}.csv`
+        `brightloop-monthly-revenue-${new Date().toISOString().slice(0, 10)}.csv`
       );
       showToast('Monthly revenue CSV downloaded.', 'success');
     } catch (err) {

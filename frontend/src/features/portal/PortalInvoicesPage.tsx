@@ -53,23 +53,32 @@ export const PortalInvoicesPage: React.FC = () => {
   const [isPaying, setIsPaying] = useState(false);
   const [completedReceipt, setCompletedReceipt] = useState<PortalPayResponse | null>(null);
 
-  const loadMyInvoices = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await apiRequest<Invoice[]>('/me/invoices');
-      setInvoices(data);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Unable to load invoices', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showToast]);
+  const loadMyInvoices = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const data = await apiRequest<Invoice[]>('/me/invoices');
+        setInvoices(data);
+      } catch (err) {
+        if (!silent) {
+          showToast(err instanceof Error ? err.message : 'Unable to load invoices', 'error');
+        }
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [showToast]
+  );
 
   useEffect(() => {
-    void loadMyInvoices();
+    void loadMyInvoices(false);
   }, [loadMyInvoices]);
 
-  useRealtimeSync(loadMyInvoices, { pollIntervalMs: 30000 });
+  const syncMyInvoicesSilently = useCallback(() => {
+    void loadMyInvoices(true);
+  }, [loadMyInvoices]);
+
+  useRealtimeSync(syncMyInvoicesSilently, { pollIntervalMs: 30000 });
 
   const totals = useMemo(() => {
     let paid = 0;
@@ -349,7 +358,7 @@ export const PortalInvoicesPage: React.FC = () => {
       {/* Online Payment Gateway Modal with Built-In Sandbox Toggle (FE-7.2) */}
       <Modal
         isOpen={Boolean(checkoutInvoice)}
-        eyebrow="SSVN Systems Checkout Gateway"
+        eyebrow="Brightloop Checkout"
         title={
           completedReceipt
             ? `Payment Confirmed — ${completedReceipt.invoice.number}`

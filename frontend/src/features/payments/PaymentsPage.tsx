@@ -86,31 +86,40 @@ export const PaymentsPage: React.FC = () => {
     [debouncedSearch, fromDate, methodFilter, page, reversalFilter, toDate]
   );
 
-  const loadPayments = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [payRes, settingsRes] = await Promise.all([
-        apiRequest<PaginatedResponse<PaymentRecord>>(
-          `/payments?${buildQueryString(true, false)}`
-        ),
-        apiRequest<SystemSettings>('/settings').catch(() => null),
-      ]);
-      setPayments(payRes.items);
-      setTotalPages(payRes.total_pages);
-      setTotal(payRes.total);
-      if (settingsRes?.currency) setCurrency(settingsRes.currency);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Failed to load payments', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [buildQueryString, showToast]);
+  const loadPayments = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const [payRes, settingsRes] = await Promise.all([
+          apiRequest<PaginatedResponse<PaymentRecord>>(
+            `/payments?${buildQueryString(true, false)}`
+          ),
+          apiRequest<SystemSettings>('/settings').catch(() => null),
+        ]);
+        setPayments(payRes.items);
+        setTotalPages(payRes.total_pages);
+        setTotal(payRes.total);
+        if (settingsRes?.currency) setCurrency(settingsRes.currency);
+      } catch (err) {
+        if (!silent) {
+          showToast(err instanceof Error ? err.message : 'Failed to load payments', 'error');
+        }
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [buildQueryString, showToast]
+  );
 
   useEffect(() => {
-    void loadPayments();
+    void loadPayments(false);
   }, [loadPayments]);
 
-  useRealtimeSync(loadPayments, { pollIntervalMs: 30000 });
+  const syncPaymentsSilently = useCallback(() => {
+    void loadPayments(true);
+  }, [loadPayments]);
+
+  useRealtimeSync(syncPaymentsSilently, { pollIntervalMs: 30000 });
 
   const summary = useMemo(() => {
     let grossCollected = 0;
@@ -155,7 +164,7 @@ export const PaymentsPage: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `ssvn-systems-payments-register-${new Date().toISOString().slice(0, 10)}.csv`;
+      anchor.download = `brightloop-payments-register-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

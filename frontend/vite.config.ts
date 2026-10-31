@@ -7,8 +7,16 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api/v1': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (_err, _req, res) => {
+            if ('writeHead' in res && !res.headersSent) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ proxy_offline: true }));
+            }
+          });
+        },
       },
     },
   },

@@ -32,7 +32,7 @@ describe('Phase 2 — Catalog: Products, Variants, Plans & Taxes RBAC', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('SSVN Systems Core ERP Suite')).toBeInTheDocument();
+      expect(screen.getByText('Brightloop Core ERP Suite')).toBeInTheDocument();
     });
 
     expect(screen.getByText('Unit Margin')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('Phase 2 — Catalog: Products, Variants, Plans & Taxes RBAC', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('SSVN Systems Core ERP Suite')).toBeInTheDocument();
+      expect(screen.getByText('Brightloop Core ERP Suite')).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Unit Margin')).not.toBeInTheDocument();

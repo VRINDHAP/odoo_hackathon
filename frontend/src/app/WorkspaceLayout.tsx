@@ -26,7 +26,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { apiRequest, getApiDataSourceMode } from '../api/client';
+import { apiRequest } from '../api/client';
 import { emitManualRefresh, getLastSyncTimestamp } from '../api/realtimeBus';
 import { StatusChip } from '../components/chips/StatusChip';
 import { Button } from '../components/forms/Primitives';
@@ -44,33 +44,33 @@ interface NavItem {
 }
 
 const OVERVIEW_NAV: NavItem[] = [
-  { to: '/dashboard', label: 'Finance Dashboard', section: 'Overview', icon: <LayoutDashboard size={16} /> },
+  { to: '/dashboard', label: 'Dashboard', section: 'Overview', icon: <LayoutDashboard size={16} /> },
 ];
 
 const SALES_NAV: NavItem[] = [
   { to: '/customers', label: 'Customers', section: 'Sales & Subscriptions', icon: <Users size={16} /> },
-  { to: '/quotation-templates', label: 'Quotation Templates', section: 'Sales & Subscriptions', icon: <FileSpreadsheet size={16} /> },
+  { to: '/quotation-templates', label: 'Templates', section: 'Sales & Subscriptions', icon: <FileSpreadsheet size={16} /> },
   { to: '/subscriptions', label: 'Subscriptions', section: 'Sales & Subscriptions', icon: <Repeat size={16} /> },
 ];
 
 const CATALOG_NAV: NavItem[] = [
-  { to: '/products', label: 'Products & Variants', section: 'Catalog & Pricing', icon: <Boxes size={16} /> },
-  { to: '/plans', label: 'Plans & Flags', section: 'Catalog & Pricing', icon: <Layers size={16} /> },
-  { to: '/taxes', label: 'Tax Rules', section: 'Catalog & Pricing', icon: <Receipt size={16} /> },
+  { to: '/products', label: 'Products', section: 'Catalog & Pricing', icon: <Boxes size={16} /> },
+  { to: '/plans', label: 'Plans', section: 'Catalog & Pricing', icon: <Layers size={16} /> },
+  { to: '/taxes', label: 'Taxes', section: 'Catalog & Pricing', icon: <Receipt size={16} /> },
   { to: '/discounts', label: 'Discounts', section: 'Catalog & Pricing', icon: <Percent size={16} />, adminOnly: true },
 ];
 
 const BILLING_NAV: NavItem[] = [
   { to: '/invoices', label: 'Invoices', section: 'Billing & Ledger', icon: <FileText size={16} /> },
-  { to: '/payments', label: 'Payments Register', section: 'Billing & Ledger', icon: <CreditCard size={16} /> },
-  { to: '/overdue', label: 'Overdue & Aging', section: 'Billing & Ledger', icon: <AlertTriangle size={16} /> },
-  { to: '/reports', label: 'Reports & CSV', section: 'Billing & Ledger', icon: <BarChart3 size={16} /> },
+  { to: '/payments', label: 'Payments', section: 'Billing & Ledger', icon: <CreditCard size={16} /> },
+  { to: '/overdue', label: 'Overdue', section: 'Billing & Ledger', icon: <AlertTriangle size={16} /> },
+  { to: '/reports', label: 'Reports', section: 'Billing & Ledger', icon: <BarChart3 size={16} /> },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { to: '/staff', label: 'Staff Directory', section: 'Administration', icon: <Shield size={16} />, adminOnly: true },
+  { to: '/staff', label: 'Staff', section: 'Administration', icon: <Shield size={16} />, adminOnly: true },
   { to: '/audit-logs', label: 'Audit Log', section: 'Administration', icon: <History size={16} />, adminOnly: true },
-  { to: '/settings', label: 'System Settings', section: 'Administration', icon: <Settings size={16} />, adminOnly: true },
+  { to: '/settings', label: 'Settings', section: 'Administration', icon: <Settings size={16} />, adminOnly: true },
 ];
 
 const ALL_NAV_ITEMS: NavItem[] = [
@@ -127,7 +127,7 @@ export const WorkspaceLayout: React.FC = () => {
     );
     if (!matched) {
       return {
-        section: isAdmin ? 'Executive & Admin Console' : 'Internal Staff Operations',
+        section: isAdmin ? 'Admin Console' : 'Operations',
         parent: null as { to: string; label: string } | null,
         current: 'Workspace',
       };
@@ -167,6 +167,11 @@ export const WorkspaceLayout: React.FC = () => {
     const base = user?.name || user?.email || 'BL';
     return base.slice(0, 2).toUpperCase();
   }, [user]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
 
   const renderSection = (title: string, items: NavItem[]) => {
     const visible = items.filter((item) => !item.adminOnly || isAdmin);
@@ -211,7 +216,7 @@ export const WorkspaceLayout: React.FC = () => {
             <span className="brand-bolt">
               <Zap size={14} />
             </span>
-            <span>SSVN Systems</span>
+            <span>Brightloop</span>
           </Link>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <StatusChip status={user?.role ?? 'staff'} showDot={false} />
@@ -248,10 +253,18 @@ export const WorkspaceLayout: React.FC = () => {
                   textOverflow: 'ellipsis',
                 }}
               >
-                {user?.email}
+                {user?.name || user?.email}
               </div>
-              <div className="type-caption" style={{ fontSize: 11, textTransform: 'capitalize' }}>
-                {user?.role} workspace
+              <div
+                className="type-caption"
+                style={{
+                  fontSize: 11,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user?.email}
               </div>
             </div>
           </div>
@@ -260,7 +273,7 @@ export const WorkspaceLayout: React.FC = () => {
             className="btn btn-outline"
             onClick={() => void handleSignOut()}
             title="Sign out"
-            aria-label="Sign out from sidebar"
+            aria-label="Sign out"
             style={{ padding: 6 }}
           >
             <LogOut size={14} />
@@ -305,7 +318,7 @@ export const WorkspaceLayout: React.FC = () => {
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
                 <Search size={14} />
-                <span className="desktop-only">Search or jump to…</span>
+                <span className="desktop-only">Search…</span>
               </span>
               <span className="kbd-chip desktop-only">Ctrl K</span>
             </button>
@@ -314,11 +327,14 @@ export const WorkspaceLayout: React.FC = () => {
             <div style={{ position: 'relative' }}>
               <Button
                 variant="primary"
-                onClick={() => setQuickCreateOpen((o) => !o)}
+                onClick={() => {
+                  setNotifOpen(false);
+                  setQuickCreateOpen((o) => !o);
+                }}
                 aria-label="Quick actions"
               >
                 <Plus size={14} />
-                <span className="desktop-only">Quick Action</span>
+                <span className="desktop-only">New</span>
               </Button>
 
               {quickCreateOpen ? (
@@ -328,7 +344,7 @@ export const WorkspaceLayout: React.FC = () => {
                     position: 'absolute',
                     top: 44,
                     right: 0,
-                    width: 245,
+                    width: 230,
                     boxShadow: 'var(--shadow-modal)',
                     zIndex: 48,
                     padding: 8,
@@ -338,14 +354,14 @@ export const WorkspaceLayout: React.FC = () => {
                   }}
                 >
                   <span className="eyebrow-cap" style={{ padding: '4px 10px' }}>
-                    Workflows
+                    Quick Create
                   </span>
                   {[
-                    { label: 'Subscriptions & Quotes', to: '/subscriptions' },
-                    { label: 'Start from Template', to: '/quotation-templates' },
-                    { label: 'Customer Directory', to: '/customers' },
+                    { label: 'New Subscription', to: '/subscriptions' },
+                    { label: 'Use Template', to: '/quotation-templates' },
+                    { label: 'New Customer', to: '/customers' },
                     { label: 'Record Payment', to: '/payments' },
-                    { label: 'Chase Overdue Invoices', to: '/overdue' },
+                    { label: 'Overdue Dunning', to: '/overdue' },
                     ...(isAdmin
                       ? [
                           { label: 'Products & Variants', to: '/products' },
@@ -370,24 +386,13 @@ export const WorkspaceLayout: React.FC = () => {
               ) : null}
             </div>
 
-            <span className="desktop-only">
-              <StatusChip
-                status={
-                  getApiDataSourceMode() === 'live'
-                    ? `Live API · ${syncClockLabel}`
-                    : `Dynamic Ledger · ${syncClockLabel}`
-                }
-                variant={getApiDataSourceMode() === 'live' ? 'active' : 'neutral'}
-              />
-            </span>
-
             <button
               type="button"
               className="btn btn-outline"
               onClick={handleManualSync}
-              title="Sync live ledger data across tabs"
+              title={`Synced ${syncClockLabel} — click to refresh`}
               aria-label="Sync live data"
-              style={{ padding: '7px 10px' }}
+              style={{ padding: '7px 9px' }}
             >
               <RefreshCw size={14} />
             </button>
@@ -395,11 +400,15 @@ export const WorkspaceLayout: React.FC = () => {
             <button
               type="button"
               className="btn btn-outline"
-              onClick={() => setNotifOpen((o) => !o)}
+              onClick={() => {
+                setQuickCreateOpen(false);
+                setNotifOpen((o) => !o);
+              }}
               aria-label="Notifications"
+              style={{ padding: unreadCount > 0 ? '7px 10px' : '7px 9px' }}
             >
               <Bell size={15} />
-              <span>{notifications.filter((n) => !n.read).length}</span>
+              {unreadCount > 0 ? <span style={{ fontSize: 12 }}>{unreadCount}</span> : null}
             </button>
 
             {notifOpen ? (
@@ -409,14 +418,14 @@ export const WorkspaceLayout: React.FC = () => {
                   position: 'absolute',
                   top: 46,
                   right: 0,
-                  width: 'min(340px, calc(100vw - 32px))',
+                  width: 'min(330px, calc(100vw - 32px))',
                   boxShadow: 'var(--shadow-modal)',
                   zIndex: 45,
                   padding: 16,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span className="eyebrow-cap">System Alerts</span>
+                  <span className="eyebrow-cap">Notifications</span>
                   <button
                     type="button"
                     onClick={() =>
@@ -455,11 +464,6 @@ export const WorkspaceLayout: React.FC = () => {
                 )}
               </div>
             ) : null}
-
-            <Button variant="outline" onClick={() => void handleSignOut()}>
-              <LogOut size={14} />
-              <span className="desktop-only">Sign out</span>
-            </Button>
           </div>
         </header>
 

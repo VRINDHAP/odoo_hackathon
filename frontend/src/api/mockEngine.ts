@@ -55,7 +55,7 @@ class MockDatabase {
   users: MockUserRecord[] = [
     {
       id: 'usr-admin-01',
-      email: 'admin@ssvnsystems.com',
+      email: 'admin@brightloop.io',
       name: 'Surya T S',
       role: 'admin',
       customer_id: null,
@@ -68,7 +68,7 @@ class MockDatabase {
     },
     {
       id: 'usr-staff-01',
-      email: 'nandana@ssvnsystems.com',
+      email: 'nandana@brightloop.io',
       name: 'Nandana R',
       role: 'staff',
       customer_id: null,
@@ -81,7 +81,7 @@ class MockDatabase {
     },
     {
       id: 'usr-staff-02',
-      email: 'vrindha@ssvnsystems.com',
+      email: 'vrindha@brightloop.io',
       name: 'Vrindha K',
       role: 'staff',
       customer_id: null,
@@ -108,9 +108,9 @@ class MockDatabase {
   ];
 
   settings: SystemSettings = {
-    company_name: 'SSVN Systems Pvt. Ltd.',
-    company_email: 'billing@ssvnsystems.com',
-    company_tax_id: '29AABCS4821M1Z4',
+    company_name: 'Brightloop Software Pvt. Ltd.',
+    company_email: 'billing@brightloop.io',
+    company_tax_id: '29AABCB4821M1Z4',
     company_address: '42 Residency Road, Indiranagar, Bengaluru, KA 560038',
     timezone: 'Asia/Kolkata',
     currency: 'INR',
@@ -129,7 +129,7 @@ class MockDatabase {
   products: Product[] = [
     {
       id: 'prod-01',
-      name: 'SSVN Systems Core ERP Suite',
+      name: 'Brightloop Core ERP Suite',
       type: 'software',
       sales_price: '4500.00',
       cost_price: '1200.00',
@@ -407,7 +407,7 @@ class MockDatabase {
         {
           id: 'tpl-line-01',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: 'var-01',
           variant_label: 'Edition: Enterprise SSO',
           quantity: 10,
@@ -435,7 +435,7 @@ class MockDatabase {
         {
           id: 'tpl-line-03',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: null,
           variant_label: null,
           quantity: 15,
@@ -483,7 +483,7 @@ class MockDatabase {
         {
           id: 'sline-01',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: 'var-01',
           variant_label: 'Edition: Enterprise SSO',
           quantity: 10,
@@ -510,8 +510,8 @@ class MockDatabase {
         },
       ],
       activities: [
-        { id: 'act-01', timestamp: '2026-03-05T09:10:00Z', actor_email: 'nandana@ssvnsystems.com', action: 'Activated', note: 'Subscription activated on schedule.' },
-        { id: 'act-02', timestamp: '2026-10-05T00:05:00Z', actor_email: 'system@ssvnsystems.com', action: 'Billed', note: 'Generated invoice INV-2026-000412.' },
+        { id: 'act-01', timestamp: '2026-03-05T09:10:00Z', actor_email: 'nandana@brightloop.io', action: 'Activated', note: 'Subscription activated on schedule.' },
+        { id: 'act-02', timestamp: '2026-10-05T00:05:00Z', actor_email: 'system@brightloop.io', action: 'Billed', note: 'Generated invoice INV-2026-000412.' },
       ],
     },
     {
@@ -541,7 +541,7 @@ class MockDatabase {
         {
           id: 'sline-03',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: null,
           variant_label: null,
           quantity: 10,
@@ -554,7 +554,7 @@ class MockDatabase {
         },
       ],
       activities: [
-        { id: 'act-03', timestamp: '2026-03-18T11:00:00Z', actor_email: 'admin@ssvnsystems.com', action: 'Activated', note: 'Annual enterprise contract signed.' },
+        { id: 'act-03', timestamp: '2026-03-18T11:00:00Z', actor_email: 'admin@brightloop.io', action: 'Activated', note: 'Annual enterprise contract signed.' },
       ],
     },
     {
@@ -597,7 +597,7 @@ class MockDatabase {
         },
       ],
       activities: [
-        { id: 'act-04', timestamp: '2026-10-02T14:00:00Z', actor_email: 'vrindha@ssvnsystems.com', action: 'Paused', note: 'Seasonal warehouse renovation pause.' },
+        { id: 'act-04', timestamp: '2026-10-02T14:00:00Z', actor_email: 'vrindha@brightloop.io', action: 'Paused', note: 'Seasonal warehouse renovation pause.' },
       ],
     },
     {
@@ -627,7 +627,7 @@ class MockDatabase {
         {
           id: 'sline-05',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: null,
           variant_label: null,
           quantity: 5,
@@ -654,7 +654,7 @@ class MockDatabase {
         },
       ],
       activities: [
-        { id: 'act-05', timestamp: '2026-10-28T16:30:00Z', actor_email: 'nandana@ssvnsystems.com', action: 'Quotation Sent', note: 'Sent formal quote valid through Nov 15.' },
+        { id: 'act-05', timestamp: '2026-10-28T16:30:00Z', actor_email: 'nandana@brightloop.io', action: 'Quotation Sent', note: 'Sent formal quote valid through Nov 15.' },
       ],
     },
     {
@@ -684,7 +684,7 @@ class MockDatabase {
         {
           id: 'sline-07',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: 'var-02',
           variant_label: 'Region: Dedicated India DC',
           quantity: 5,
@@ -697,7 +697,7 @@ class MockDatabase {
         },
       ],
       activities: [
-        { id: 'act-06', timestamp: '2026-10-30T10:15:00Z', actor_email: 'nandana@ssvnsystems.com', action: 'Draft Created', note: 'Prepared initial seat estimate.' },
+        { id: 'act-06', timestamp: '2026-10-30T10:15:00Z', actor_email: 'nandana@brightloop.io', action: 'Draft Created', note: 'Prepared initial seat estimate.' },
       ],
     },
     {
@@ -728,7 +728,7 @@ class MockDatabase {
         {
           id: 'sline-08',
           product_id: 'prod-01',
-          product_name: 'SSVN Systems Core ERP Suite',
+          product_name: 'Brightloop Core ERP Suite',
           variant_id: null,
           variant_label: null,
           quantity: 5,
@@ -741,7 +741,7 @@ class MockDatabase {
         },
       ],
       activities: [
-        { id: 'act-07', timestamp: '2026-08-02T09:00:00Z', actor_email: 'admin@ssvnsystems.com', action: 'Closed', note: 'Completed 6-month transition contract.' },
+        { id: 'act-07', timestamp: '2026-08-02T09:00:00Z', actor_email: 'admin@brightloop.io', action: 'Closed', note: 'Completed 6-month transition contract.' },
       ],
     },
   ];
@@ -770,7 +770,7 @@ class MockDatabase {
       lines: [
         {
           id: 'iline-01',
-          description: 'SSVN Systems Core ERP Suite (Enterprise SSO) × 10',
+          description: 'Brightloop Core ERP Suite (Enterprise SSO) × 10',
           quantity: 10,
           unit_price: '6000.00',
           tax_rate: '18.00',
@@ -815,7 +815,7 @@ class MockDatabase {
       lines: [
         {
           id: 'iline-03',
-          description: 'SSVN Systems Core ERP Suite (Enterprise SSO) × 10',
+          description: 'Brightloop Core ERP Suite (Enterprise SSO) × 10',
           quantity: 10,
           unit_price: '6000.00',
           tax_rate: '18.00',
@@ -859,7 +859,7 @@ class MockDatabase {
       lines: [
         {
           id: 'iline-05',
-          description: 'SSVN Systems Core ERP Suite (Annual Commit) × 10',
+          description: 'Brightloop Core ERP Suite (Annual Commit) × 10',
           quantity: 10,
           unit_price: '48000.00',
           tax_rate: '18.00',
@@ -925,7 +925,7 @@ class MockDatabase {
       lines: [
         {
           id: 'iline-07',
-          description: 'SSVN Systems Core ERP Suite (Dedicated India DC) × 5',
+          description: 'Brightloop Core ERP Suite (Dedicated India DC) × 5',
           quantity: 5,
           unit_price: '5300.00',
           tax_rate: '18.00',
@@ -1017,7 +1017,7 @@ class MockDatabase {
       id: 'aud-01',
       timestamp: '2026-10-31T06:50:12Z',
       actor_id: 'usr-admin-01',
-      actor_email: 'admin@ssvnsystems.com',
+      actor_email: 'admin@brightloop.io',
       actor_role: 'admin',
       entity: 'Plan',
       entity_id: 'plan-monthly-growth',
@@ -1030,7 +1030,7 @@ class MockDatabase {
       id: 'aud-02',
       timestamp: '2026-10-30T15:42:08Z',
       actor_id: 'usr-staff-02',
-      actor_email: 'vrindha@ssvnsystems.com',
+      actor_email: 'vrindha@brightloop.io',
       actor_role: 'staff',
       entity: 'Subscription',
       entity_id: 'SUB-2026-000103',
@@ -1043,7 +1043,7 @@ class MockDatabase {
       id: 'aud-03',
       timestamp: '2026-10-28T16:30:40Z',
       actor_id: 'usr-staff-01',
-      actor_email: 'nandana@ssvnsystems.com',
+      actor_email: 'nandana@brightloop.io',
       actor_role: 'staff',
       entity: 'Subscription',
       entity_id: 'SUB-2026-000104',
@@ -1069,14 +1069,14 @@ class MockDatabase {
       id: 'aud-05',
       timestamp: '2026-09-12T11:05:00Z',
       actor_id: 'usr-admin-01',
-      actor_email: 'admin@ssvnsystems.com',
+      actor_email: 'admin@brightloop.io',
       actor_role: 'admin',
       entity: 'User',
       entity_id: 'usr-staff-02',
       action: 'staff.provisioned',
       ip_address: '103.21.58.14',
       before: null,
-      after: { email: 'vrindha@ssvnsystems.com', role: 'staff', is_active: true },
+      after: { email: 'vrindha@brightloop.io', role: 'staff', is_active: true },
     },
   ];
 
@@ -1113,7 +1113,7 @@ class MockDatabase {
       id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       timestamp: new Date().toISOString(),
       actor_id: actor?.id ?? 'system',
-      actor_email: actor?.email ?? 'system@ssvnsystems.com',
+      actor_email: actor?.email ?? 'system@brightloop.io',
       actor_role: actor?.role ?? 'admin',
       entity,
       entity_id: entityId,
@@ -1317,7 +1317,7 @@ function buildInvoiceFromSubscription(
 function generateInvoicePdfBlob(invoice: Invoice): Blob {
   // Valid minimal single-page PDF binary stream rendered locally (zero external cloud PDF widgets!)
   const linesText = [
-    `SSVN SYSTEMS TAX INVOICE - ${invoice.number}`,
+    `BRIGHTLOOP TAX INVOICE - ${invoice.number}`,
     `Customer: ${invoice.customer_name}`,
     `Status: ${invoice.status.toUpperCase()}   Issue Date: ${invoice.issue_date}   Due Date: ${invoice.due_date}`,
     `----------------------------------------------------------------`,
@@ -1381,8 +1381,8 @@ export async function handleMockRequest(
   // ================= AUTH & USERS =================
   if (upperMethod === 'POST' && path === '/auth/login') {
     const rawEmail = normalizeEmail(String(payload.email ?? ''));
-    const email = rawEmail.endsWith('@brightloop.io')
-      ? rawEmail.replace('@brightloop.io', '@ssvnsystems.com')
+    const email = rawEmail.endsWith('@ssvnsystems.com')
+      ? rawEmail.replace('@ssvnsystems.com', '@brightloop.io')
       : rawEmail;
     const password = String(payload.password ?? '');
     const user = mockDb.users.find((u) => u.email === email);
@@ -1936,7 +1936,7 @@ export async function handleMockRequest(
         {
           id: `act-${Date.now()}`,
           timestamp: new Date().toISOString(),
-          actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+          actor_email: actor?.email ?? 'staff@brightloop.io',
           action: 'Draft Created from Template',
           note: `Generated from template "${tpl.name}".`,
         },
@@ -2000,7 +2000,7 @@ export async function handleMockRequest(
           {
             id: `act-${Date.now()}`,
             timestamp: new Date().toISOString(),
-            actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+            actor_email: actor?.email ?? 'staff@brightloop.io',
             action: 'Draft Created',
             note: 'Subscription initialized in Draft.',
           },
@@ -2029,7 +2029,7 @@ export async function handleMockRequest(
       sub.activities.unshift({
         id: `act-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+        actor_email: actor?.email ?? 'staff@brightloop.io',
         action: 'Paused',
         note: 'Billing skips paused periods.',
       });
@@ -2041,7 +2041,7 @@ export async function handleMockRequest(
       sub.activities.unshift({
         id: `act-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+        actor_email: actor?.email ?? 'staff@brightloop.io',
         action: 'Resumed',
         note: `Recomputed next billing date to ${sub.next_billing_date}.`,
       });
@@ -2060,7 +2060,7 @@ export async function handleMockRequest(
       sub.activities.unshift({
         id: `act-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+        actor_email: actor?.email ?? 'staff@brightloop.io',
         action: 'Closed',
         note: reason,
       });
@@ -2074,7 +2074,7 @@ export async function handleMockRequest(
       sub.activities.unshift({
         id: `act-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+        actor_email: actor?.email ?? 'staff@brightloop.io',
         action: 'Renewed',
         note: `Renewed for a fresh billing term starting ${sub.start_date}.`,
       });
@@ -2103,7 +2103,7 @@ export async function handleMockRequest(
       sub.activities.unshift({
         id: `act-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+        actor_email: actor?.email ?? 'staff@brightloop.io',
         action: `Transition -> ${target}`,
         note: `State updated from ${beforeState} to ${target}.`,
       });
@@ -2164,7 +2164,7 @@ export async function handleMockRequest(
     sub.activities.unshift({
       id: `act-${Date.now()}`,
       timestamp: new Date().toISOString(),
-      actor_email: actor?.email ?? 'staff@ssvnsystems.com',
+      actor_email: actor?.email ?? 'staff@brightloop.io',
       action: 'Invoice Generated',
       note: `Created invoice ${createdInv.number} (${createdInv.currency} ${createdInv.total}).`,
     });

@@ -226,7 +226,7 @@ describe('Phase 7 — Customer Portal Isolation, Sandbox Checkout, Profile & >10
           {
             id: 'e2e-line-1',
             product_id: 'prod-01',
-            product_name: 'SSVN Systems Core ERP Suite',
+            product_name: 'Brightloop Core ERP Suite',
             variant_id: null,
             quantity: 2,
             unit_price: '10000.00',

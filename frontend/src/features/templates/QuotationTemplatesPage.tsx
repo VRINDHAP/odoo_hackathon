@@ -340,7 +340,7 @@ export const QuotationTemplatesPage: React.FC = () => {
       <Modal
         isOpen={isBuilderOpen}
         title="Build Quotation Template"
-        eyebrow="POST /api/v1/quotation-templates"
+        eyebrow="Quotation Template"
         maxWidth={680}
         onClose={() => setIsBuilderOpen(false)}
         footer={

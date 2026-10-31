@@ -50,38 +50,47 @@ export const DashboardPage: React.FC = () => {
   const [billingModalOpen, setBillingModalOpen] = useState(false);
   const [remindingId, setRemindingId] = useState<string | null>(null);
 
-  const loadDashboard = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const qs = new URLSearchParams();
-      qs.set('months', monthsHorizon);
-      if (fromDate) qs.set('from', fromDate);
-      if (toDate) qs.set('to', toDate);
+  const loadDashboard = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const qs = new URLSearchParams();
+        qs.set('months', monthsHorizon);
+        if (fromDate) qs.set('from', fromDate);
+        if (toDate) qs.set('to', toDate);
 
-      const [sumRes, payRes, overRes, subRes] = await Promise.all([
-        apiRequest<DashboardSummary>(`/reports/summary?${qs.toString()}`),
-        apiRequest<PaymentsReportResponse>(`/reports/payments?${qs.toString()}`),
-        apiRequest<OverdueReportResponse>('/reports/overdue'),
-        apiRequest<Subscription[]>('/reports/active-subscriptions'),
-      ]);
+        const [sumRes, payRes, overRes, subRes] = await Promise.all([
+          apiRequest<DashboardSummary>(`/reports/summary?${qs.toString()}`),
+          apiRequest<PaymentsReportResponse>(`/reports/payments?${qs.toString()}`),
+          apiRequest<OverdueReportResponse>('/reports/overdue'),
+          apiRequest<Subscription[]>('/reports/active-subscriptions'),
+        ]);
 
-      setSummary(sumRes);
-      setPaymentsReport(payRes);
-      setOverdueInvoices(overRes.items);
-      setActiveSubs(subRes);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Failed to load finance dashboard', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fromDate, monthsHorizon, showToast, toDate]);
+        setSummary(sumRes);
+        setPaymentsReport(payRes);
+        setOverdueInvoices(overRes.items);
+        setActiveSubs(subRes);
+      } catch (err) {
+        if (!silent) {
+          showToast(err instanceof Error ? err.message : 'Failed to load finance dashboard', 'error');
+        }
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [fromDate, monthsHorizon, showToast, toDate]
+  );
 
   useEffect(() => {
-    void loadDashboard();
+    void loadDashboard(false);
+  }, [loadDashboard]);
+
+  const syncDashboardSilently = useCallback(() => {
+    void loadDashboard(true);
   }, [loadDashboard]);
 
   // Real-time cross-tab & mutation synchronization + 30s live telemetry revalidation
-  useRealtimeSync(loadDashboard, { pollIntervalMs: 30000 });
+  useRealtimeSync(syncDashboardSilently, { pollIntervalMs: 30000 });
 
   const handleQuickRemind = async (inv: Invoice) => {
     setRemindingId(inv.id);

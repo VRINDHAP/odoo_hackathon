@@ -55,7 +55,7 @@ export const BillingRunModal: React.FC<BillingRunModalProps> = ({
     <Modal
       isOpen={isOpen}
       title="Manual Billing Engine Run"
-      eyebrow="POST /api/v1/billing/run · Idempotent Job"
+      eyebrow="Billing Cycle"
       onClose={handleClose}
       footer={
         summary ? (

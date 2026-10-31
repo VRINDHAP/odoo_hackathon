@@ -264,7 +264,7 @@ export const CustomersPage: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         title="Create Customer Profile"
-        eyebrow="POST /api/v1/customers"
+        eyebrow="New Customer"
         onClose={() => setIsModalOpen(false)}
         footer={
           <>
