@@ -8,7 +8,12 @@ import {
 } from '../../components/forms/Primitives';
 import { useToast } from '../../hooks/useToast';
 import type { BillingAddress, Customer } from '../../types/domain';
-import { evaluatePasswordStrength } from '../../utils/validation';
+import {
+  evaluatePasswordStrength,
+  isValidPhone,
+  isValidPostalCode,
+  isValidTaxId,
+} from '../../utils/validation';
 
 const EMPTY_ADDRESS: BillingAddress = {
   line1: '',
@@ -37,6 +42,7 @@ export const PortalProfilePage: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [taxId, setTaxId] = useState('');
   const [address, setAddress] = useState<BillingAddress>(EMPTY_ADDRESS);
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Password Change Form
@@ -68,6 +74,29 @@ export const PortalProfilePage: React.FC = () => {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!name.trim()) errs.name = 'Primary contact name is required.';
+    if (!companyName.trim()) errs.company_name = 'Company legal name is required.';
+    if (phone.trim() && !isValidPhone(phone)) {
+      errs.phone = 'Enter a valid phone number (7–15 digits).';
+    }
+    if (taxId.trim() && !isValidTaxId(taxId)) {
+      errs.tax_id = 'Tax registration ID must be 6–20 alphanumeric characters.';
+    }
+    if (!address.line1.trim()) errs.line1 = 'Street address line 1 is required.';
+    if (!address.city.trim()) errs.city = 'City is required.';
+    if (!address.state.trim()) errs.state = 'State is required.';
+    if (!address.postal_code.trim() || !isValidPostalCode(address.postal_code)) {
+      errs.postal_code = 'Enter a valid 4–10 character postal code.';
+    }
+    if (!address.country.trim()) errs.country = 'Country is required.';
+
+    if (Object.keys(errs).length > 0) {
+      setProfileErrors(errs);
+      return;
+    }
+
+    setProfileErrors({});
     setIsSavingProfile(true);
     try {
       const updated = await apiRequest<Customer>('/me/profile', {
@@ -77,12 +106,23 @@ export const PortalProfilePage: React.FC = () => {
           company_name: companyName.trim(),
           phone: phone.trim(),
           tax_id: taxId.trim(),
-          billing_address: address,
+          billing_address: {
+            ...address,
+            line1: address.line1.trim(),
+            line2: (address.line2 ?? '').trim(),
+            city: address.city.trim(),
+            state: address.state.trim(),
+            postal_code: address.postal_code.trim(),
+            country: address.country.trim(),
+          },
         },
       });
       setProfile(updated);
       showToast('Billing profile and address updated.', 'success');
     } catch (err) {
+      if (err instanceof ApiClientError) {
+        setProfileErrors(err.toFieldMap());
+      }
       showToast(err instanceof Error ? err.message : 'Failed to update profile', 'error');
     } finally {
       setIsSavingProfile(false);
@@ -168,7 +208,7 @@ export const PortalProfilePage: React.FC = () => {
               label="Primary Contact Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
+              error={profileErrors.name}
             />
             <FormInput
               label="Account Email (Read-only)"
@@ -182,12 +222,13 @@ export const PortalProfilePage: React.FC = () => {
               label="Company Legal Name"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              required
+              error={profileErrors.company_name}
             />
             <FormInput
               label="Phone Number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              error={profileErrors.phone}
             />
           </div>
 
@@ -195,13 +236,14 @@ export const PortalProfilePage: React.FC = () => {
             label="GSTIN / Tax Registration ID"
             value={taxId}
             onChange={(e) => setTaxId(e.target.value)}
+            error={profileErrors.tax_id}
           />
 
           <FormInput
             label="Street Address Line 1"
             value={address.line1}
             onChange={(e) => setAddress((p) => ({ ...p, line1: e.target.value }))}
-            required
+            error={profileErrors.line1}
           />
 
           <FormInput
@@ -215,19 +257,19 @@ export const PortalProfilePage: React.FC = () => {
               label="City"
               value={address.city}
               onChange={(e) => setAddress((p) => ({ ...p, city: e.target.value }))}
-              required
+              error={profileErrors.city}
             />
             <FormInput
               label="State"
               value={address.state}
               onChange={(e) => setAddress((p) => ({ ...p, state: e.target.value }))}
-              required
+              error={profileErrors.state}
             />
             <FormInput
               label="Postal Code"
               value={address.postal_code}
               onChange={(e) => setAddress((p) => ({ ...p, postal_code: e.target.value }))}
-              required
+              error={profileErrors.postal_code}
             />
           </div>
 
@@ -235,7 +277,7 @@ export const PortalProfilePage: React.FC = () => {
             label="Country"
             value={address.country}
             onChange={(e) => setAddress((p) => ({ ...p, country: e.target.value }))}
-            required
+            error={profileErrors.country}
           />
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 6 }}>

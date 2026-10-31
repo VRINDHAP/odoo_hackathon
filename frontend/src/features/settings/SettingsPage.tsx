@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../api/client';
+import { apiRequest, ApiClientError } from '../../api/client';
 import { Button, FormInput, FormSelect } from '../../components/forms/Primitives';
 import { useToast } from '../../hooks/useToast';
 import type { SystemSettings } from '../../types/domain';
+import { isValidEmail, isValidTaxId } from '../../utils/validation';
 
 export const SettingsPage: React.FC = () => {
   const { showToast } = useToast();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -18,6 +20,29 @@ export const SettingsPage: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
+
+    const nextErrors: Record<string, string> = {};
+    if (!settings.company_name.trim()) {
+      nextErrors.company_name = 'Company legal name is required.';
+    }
+    if (!isValidEmail(settings.company_email)) {
+      nextErrors.company_email = 'Enter a valid billing support email.';
+    }
+    if (settings.company_tax_id.trim() && !isValidTaxId(settings.company_tax_id)) {
+      nextErrors.company_tax_id = 'Tax registration ID must be 6–20 alphanumeric characters.';
+    }
+    if (!settings.subscription_prefix.trim()) {
+      nextErrors.subscription_prefix = 'Subscription prefix is required.';
+    }
+    if (!settings.invoice_prefix.trim()) {
+      nextErrors.invoice_prefix = 'Invoice prefix is required.';
+    }
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
     setIsSaving(true);
     try {
       const updated = await apiRequest<SystemSettings>('/settings', {
@@ -26,7 +51,10 @@ export const SettingsPage: React.FC = () => {
       });
       setSettings(updated);
       showToast('System settings saved and logged to audit trail', 'success');
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setErrors(err.toFieldMap());
+      }
       showToast('Failed to update settings', 'error');
     } finally {
       setIsSaving(false);
@@ -62,17 +90,20 @@ export const SettingsPage: React.FC = () => {
             label="Company Legal Name"
             value={settings.company_name}
             onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
+            error={errors.company_name}
           />
           <FormInput
             label="Billing Support Email"
             type="email"
             value={settings.company_email}
             onChange={(e) => setSettings({ ...settings, company_email: e.target.value })}
+            error={errors.company_email}
           />
           <FormInput
             label="Tax Registration ID (GSTIN / VAT)"
             value={settings.company_tax_id}
             onChange={(e) => setSettings({ ...settings, company_tax_id: e.target.value })}
+            error={errors.company_tax_id}
           />
           <FormInput
             label="Registered Billing Address"
@@ -106,11 +137,13 @@ export const SettingsPage: React.FC = () => {
               label="Subscription Prefix"
               value={settings.subscription_prefix}
               onChange={(e) => setSettings({ ...settings, subscription_prefix: e.target.value })}
+              error={errors.subscription_prefix}
             />
             <FormInput
               label="Invoice Prefix"
               value={settings.invoice_prefix}
               onChange={(e) => setSettings({ ...settings, invoice_prefix: e.target.value })}
+              error={errors.invoice_prefix}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

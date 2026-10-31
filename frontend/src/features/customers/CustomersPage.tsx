@@ -9,7 +9,13 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useToast } from '../../hooks/useToast';
 import type { Customer, PaginatedResponse } from '../../types/domain';
 import { formatDate } from '../../utils/dates';
-import { isValidEmail, normalizeEmail } from '../../utils/validation';
+import {
+  isValidEmail,
+  isValidPhone,
+  isValidPostalCode,
+  isValidTaxId,
+  normalizeEmail,
+} from '../../utils/validation';
 
 /**
  * FE-3.1 (Part A): Customer Directory Screen [SPEC.md §2, §5.2, §12.2, §16]
@@ -75,6 +81,15 @@ export const CustomersPage: React.FC = () => {
     if (!name.trim()) errs.name = 'Primary contact name is required.';
     if (!companyName.trim()) errs.company_name = 'Company name is required.';
     if (!isValidEmail(email)) errs.email = 'Enter a valid billing email.';
+    if (phone.trim() && !isValidPhone(phone)) {
+      errs.phone = 'Enter a valid phone number (7–15 digits).';
+    }
+    if (taxId.trim() && !isValidTaxId(taxId)) {
+      errs.tax_id = 'Tax ID / GSTIN must be 6–20 alphanumeric characters.';
+    }
+    if (postalCode.trim() && !isValidPostalCode(postalCode)) {
+      errs.postal_code = 'Enter a valid 4–10 character postal code.';
+    }
     if (Object.keys(errs).length > 0) {
       setFormErrors(errs);
       return;
@@ -294,6 +309,7 @@ export const CustomersPage: React.FC = () => {
               placeholder="+91 98450 00000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              error={formErrors.phone}
             />
           </div>
 
@@ -302,6 +318,7 @@ export const CustomersPage: React.FC = () => {
             placeholder="29AAACA1122B1Z5"
             value={taxId}
             onChange={(e) => setTaxId(e.target.value)}
+            error={formErrors.tax_id}
           />
 
           <FormInput
@@ -314,7 +331,13 @@ export const CustomersPage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             <FormInput label="City" placeholder="Bengaluru" value={city} onChange={(e) => setCity(e.target.value)} />
             <FormInput label="State" placeholder="Karnataka" value={stateName} onChange={(e) => setStateName(e.target.value)} />
-            <FormInput label="Postal Code" placeholder="560038" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+            <FormInput
+              label="Postal Code"
+              placeholder="560038"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              error={formErrors.postal_code}
+            />
           </div>
         </form>
       </Modal>

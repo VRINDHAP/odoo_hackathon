@@ -2,14 +2,21 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { apiRequest, ApiClientError } from '../../api/client';
 import { StatusChip } from '../../components/chips/StatusChip';
-import { Button, ConfirmModal, FormInput, FormSelect, Modal } from '../../components/forms/Primitives';
+import {
+  Button,
+  ConfirmModal,
+  FormInput,
+  FormSelect,
+  Modal,
+  PasswordChecklist,
+} from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
 import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useToast } from '../../hooks/useToast';
 import type { AuthUser, UserRole } from '../../types/domain';
 import { formatDateTime } from '../../utils/dates';
-import { isValidEmail, normalizeEmail } from '../../utils/validation';
+import { evaluatePasswordStrength, isValidEmail, normalizeEmail } from '../../utils/validation';
 
 /**
  * FE-1.6: Staff Management & Provisioning Modal (Admin Only) [SPEC.md §2, §5.1, §12.2]
@@ -27,6 +34,7 @@ export const StaffManagementPage: React.FC = () => {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('BrightStaff#2026');
   const [inviteRole, setInviteRole] = useState<UserRole>('staff');
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +77,10 @@ export const StaffManagementPage: React.FC = () => {
     const errs: Record<string, string> = {};
     if (!inviteName.trim()) errs.name = 'Staff member name is required.';
     if (!isValidEmail(inviteEmail)) errs.email = 'Valid work email is required.';
+    if (!evaluatePasswordStrength(invitePassword).isValid) {
+      errs.password =
+        'Initial password must be 9+ characters with uppercase, lowercase, and special character.';
+    }
     if (Object.keys(errs).length > 0) {
       setInviteErrors(errs);
       return;
@@ -82,6 +94,7 @@ export const StaffManagementPage: React.FC = () => {
         body: {
           name: inviteName.trim(),
           email: normalizeEmail(inviteEmail),
+          password: invitePassword,
           role: inviteRole,
         },
       });
@@ -90,6 +103,7 @@ export const StaffManagementPage: React.FC = () => {
       setIsInviteOpen(false);
       setInviteName('');
       setInviteEmail('');
+      setInvitePassword('BrightStaff#2026');
       setInviteRole('staff');
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -271,6 +285,14 @@ export const StaffManagementPage: React.FC = () => {
             error={inviteErrors.email}
             helperText="Email is normalized to lowercase and verified for uniqueness."
           />
+          <FormInput
+            label="Initial Password"
+            type="password"
+            value={invitePassword}
+            onChange={(e) => setInvitePassword(e.target.value)}
+            error={inviteErrors.password}
+          />
+          <PasswordChecklist password={invitePassword} />
           <FormSelect
             label="Assigned RBAC Role"
             value={inviteRole}
