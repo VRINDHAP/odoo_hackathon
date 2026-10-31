@@ -12,7 +12,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: App starts up and connects to PostgreSQL and Redis cleanly.
   - **Dependencies**: None.
 
-- [ ] **BE-1.2 [Nandana]**: Implement User and Identity models with argon2id/bcrypt password hashing [PDF 5.1, 9].
+- [x] **BE-1.2 [Nandana]**: Implement User and Identity models with argon2id/bcrypt password hashing [PDF 5.1, 9].
   - **Input**: SQLAlchemy definitions for `users`, `password_reset_tokens`, `refresh_tokens`.
   - **Expected Output**: Working ORM models and password hashing utility functions.
   - **Acceptance Test**: Password hashing generates valid hash; verification succeeds on correct password and fails on incorrect password.
