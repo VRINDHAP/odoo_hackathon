@@ -143,6 +143,7 @@ class Payment(Base):
     invoice = relationship("Invoice", back_populates="payments")
 
     __table_args__ = (
+        Index("idx_payments_invoice_id", "invoice_id"),
         Index("idx_payments_invoice_status", "invoice_id", "status"),
         Index("idx_payments_payment_date", "payment_date"),
         {"extend_existing": True},

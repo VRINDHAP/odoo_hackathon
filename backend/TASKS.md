@@ -80,7 +80,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: Creating customer returns ID; soft deleting customer sets `deleted_at` without removing record.
   - **Dependencies**: BE-1.3.
 
-- [ ] **BE-3.2 [Nandana]**: Implement Quotation Templates and one-click quotation factory [PDF 5.5, 8].
+- [x] **BE-3.2 [Nandana]**: Implement Quotation Templates and one-click quotation factory [PDF 5.5, 8].
   - **Input**: `GET/POST /quotation-templates`, `POST /quotation-templates/{id}/create-quotation`.
   - **Expected Output**: Templates router; factory cloning template lines into a new `Draft` subscription.
   - **Acceptance Test**: Invoking `/create-quotation` creates a `draft` subscription containing the template's line items and pricing.

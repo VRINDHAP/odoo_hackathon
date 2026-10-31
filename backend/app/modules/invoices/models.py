@@ -27,6 +27,7 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import relationship
 
@@ -193,6 +194,13 @@ class Invoice(Base):
         UniqueConstraint("subscription_id", "period_start", "period_end", name="uq_invoice_sub_period"),
         Index("idx_invoices_customer_status", "customer_id", "status"),
         Index("idx_invoices_due_date_status", "due_date", "status"),
+        Index(
+            "idx_invoices_overdue",
+            "status",
+            "due_date",
+            postgresql_where=text("status = 'confirmed' AND balance > 0"),
+            sqlite_where=text("status = 'confirmed' AND balance > 0"),
+        ),
         {"extend_existing": True},
     )
 
