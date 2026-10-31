@@ -1,0 +1,58 @@
+"""
+Main FastAPI Application Entrypoint.
+Initializes the application, registers middleware, configures global error handlers,
+and defines system health and diagnostic endpoints.
+"""
+from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from app.core.db import check_db_connection
+from app.core.errors import setup_exception_handlers
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version="1.0.0",
+    description="Modular monolith REST API for Subscription Management System (Brightloop).",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+)
+
+# Configure CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register Global Exception Handlers for uniform JSON response envelopes
+setup_exception_handlers(app)
+
+
+@app.get("/", tags=["Root"])
+def root_endpoint():
+    """Root metadata discovery endpoint."""
+    return {
+        "title": settings.PROJECT_NAME,
+        "version": "1.0.0",
+        "docs_url": f"{settings.API_V1_STR}/docs",
+        "api_v1": settings.API_V1_STR,
+        "status": "online",
+    }
+
+
+@app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
+def health_check():
+    """
+    Evaluator Health Check Probe.
+    Checks relational database connectivity and reports operational status.
+    """
+    db_healthy = check_db_connection()
+    return {
+        "status": "healthy" if db_healthy else "degraded",
+        "database": "connected" if db_healthy else "unreachable",
+        "project": settings.PROJECT_NAME,
+        "currency": settings.DEFAULT_CURRENCY,
+    }

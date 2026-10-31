@@ -6,7 +6,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
 
 ## Phase 1: Foundation (DB Models, Auth, Roles, Password Reset, Staff Creation, Audit) [PDF 17]
 
-- [ ] **BE-1.1 [Nandana]**: Create core application structure, config loader, database session manager, and error handlers [PDF 14].
+- [x] **BE-1.1 [Nandana]**: Create core application structure, config loader, database session manager, and error handlers [PDF 14].
   - **Input**: Environment config variables (`DATABASE_URL`, `JWT_SECRET`, `REDIS_URL`).
   - **Expected Output**: Reusable `app/core/` modules (`config.py`, `db.py`, `errors.py`, `deps.py`).
   - **Acceptance Test**: App starts up and connects to PostgreSQL and Redis cleanly.

@@ -1,5 +1,40 @@
-# Local environment variables
+# Database & Local Credentials (Sooraj)
 database/.env
-
-# Local database credentials
 database/pgbouncer/userlist.txt
+
+# Python & Backend (Nandana & Vrindha)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+backend/.packages/
+*.db
+*.sqlite3
+backend/brightloop.db
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node & Frontend (Surya)
+node_modules/
+frontend/dist/
+frontend/build/
+.npm
+*.tsbuildinfo
+
+# Environment & IDE
+.env
+.env.local
+.env.*.local
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
