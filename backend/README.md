@@ -3,6 +3,40 @@
 ## 1. Purpose
 This folder contains the complete technical specification, module division, task breakdown, API interfaces, and definition of done for the modular monolith REST API, background worker engine, and asynchronous jobs of the Subscription Management System [PDF 1, 3, 4, 14].
 
+## Quick Start (Local & Containerized)
+
+### 1. Launch Stack with Docker Compose
+ + '`' + ash
+docker compose up -d
+ + '`' + 
+
+### 2. Run Database Migrations
+ + '`' + ash
+alembic upgrade head
+ + '`' + 
+
+### 3. Seed Realistic Demo Data
+ + '`' + ash
+python -m backend.app.db.seed
+ + '`' + 
+
+### 4. Interactive API Documentation
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **OpenAPI Schema**: [http://localhost:8000/api/v1/openapi.json](http://localhost:8000/api/v1/openapi.json)
+- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+---
+
+## Judge / Demo Walkthrough Flow
+
+- **Step 1: Authenticate**: Log in via POST /api/v1/auth/login using pre-seeded dmin@brightloop.io / AdminPass#2026 to obtain Bearer token.
+- **Step 2: Catalog Preview**: Review available plans (GET /api/v1/plans), contracted products (GET /api/v1/catalog/products), and tax schedules (GET /api/v1/taxes).
+- **Step 3: Subscription Creation & State Transitions**: Create subscription (POST /api/v1/subscriptions) and progress through lifecycle: Draft -> Quotation -> Confirmed -> Active with anchor day stabilization.
+- **Step 4: Recurring Billing Engine Run**: Trigger billing batch via POST /api/v1/billing/run. Validates invoice generation, tax snapshotting (TaxService), atomic discount redemption, and anti-double-billing idempotency.
+- **Step 5: Payment Settlement**: Submit partial or full payment via POST /api/v1/invoices/{id}/payments. Verifies balance decrement, overpayment rejection, and automatic transition to InvoiceStatus.PAID.
+
+---
+
 ## 2. Module Ownership Split
 Work is strictly partitioned between two developers so no two people edit the same file:
 

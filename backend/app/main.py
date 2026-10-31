@@ -5,6 +5,7 @@ and defines system health and diagnostic endpoints.
 """
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.core.db import check_db_connection
 from app.core.errors import setup_exception_handlers
@@ -54,6 +55,11 @@ app.include_router(subscriptions_router, prefix=settings.API_V1_STR)
 app.include_router(discounts_router, prefix=settings.API_V1_STR)
 app.include_router(billing_router, prefix=settings.API_V1_STR)
 app.include_router(payments_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/docs", include_in_schema=False)
+def redirect_to_docs():
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
 
 
 @app.get("/", tags=["Root"])
