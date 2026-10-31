@@ -413,3 +413,4 @@ export const PlansPage: React.FC = () => {
     </div>
   );
 };
+

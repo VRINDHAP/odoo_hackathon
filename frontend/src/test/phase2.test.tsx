@@ -107,3 +107,4 @@ describe('Phase 2 — Catalog: Products, Variants, Plans & Taxes RBAC', () => {
     expect(screen.getAllByText('Exclusive').length).toBeGreaterThan(0);
   });
 });
+

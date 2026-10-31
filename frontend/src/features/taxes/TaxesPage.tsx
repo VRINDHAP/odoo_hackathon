@@ -332,3 +332,4 @@ export const TaxesPage: React.FC = () => {
     </div>
   );
 };
+
