@@ -11,6 +11,8 @@ from app.modules.auth.schemas import (
     TokenRefreshRequest,
     AuthResponse,
     MessageResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.modules.auth.service import AuthService
 
@@ -80,3 +82,38 @@ def logout(request: TokenRefreshRequest, db: Session = Depends(get_db)):
     """
     AuthService.logout(db=db, raw_token=request.refresh_token)
     return MessageResponse(message="Successfully logged out and session revoked.")
+
+
+@router.post(
+    "/forgot-password",
+    response_model=MessageResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Request password reset link with anti-enumeration [PDF 8, 9]",
+)
+def forgot_password(request: ForgotPasswordRequest, req: Request, db: Session = Depends(get_db)):
+    """
+    Anti-enumeration forgot password endpoint [PDF 9]:
+    - Always responds: 'If the email exists, a link was sent.'
+    - Generates 256-bit single-use reset token valid for 30 minutes.
+    """
+    client_ip = req.client.host if req.client else None
+    msg, _ = AuthService.forgot_password(db=db, email=request.email, ip=client_ip)
+    return MessageResponse(message=msg)
+
+
+@router.post(
+    "/reset-password",
+    response_model=MessageResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Reset account password using reset token [PDF 8, 9]",
+)
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Password reset endpoint [PDF 9]:
+    - Validates password complexity policy.
+    - Verifies 256-bit token validity.
+    - Updates password with Argon2id and marks token as used.
+    - Revokes all active user refresh tokens.
+    """
+    msg = AuthService.reset_password(db=db, raw_token=request.token, new_password=request.new_password)
+    return MessageResponse(message=msg)

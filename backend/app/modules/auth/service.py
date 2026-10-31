@@ -209,3 +209,68 @@ class AuthService:
         token_row = AuthRepository.get_refresh_token(db, token_hash)
         if token_row and token_row.revoked_at is None:
             AuthRepository.revoke_refresh_token(db, token_row)
+
+    @staticmethod
+    def forgot_password(db: Session, email: str, ip: Optional[str] = None) -> tuple[str, Optional[str]]:
+        """
+        Initiates password reset flow [PDF 8, 9].
+        Always returns constant generic message: 'If the email exists, a link was sent'
+        to prevent account enumeration.
+        """
+        constant_message = "If the email exists, a link was sent."
+        user = AuthRepository.get_by_email(db, email)
+        raw_token = None
+
+        if user and user.is_active:
+            raw_token = generate_secure_token()
+            expires_at = datetime.now(timezone.utc) + timedelta(
+                minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
+            )
+            AuthRepository.save_password_reset_token(
+                db=db,
+                user_id=user.id,
+                token_hash=hash_token(raw_token),
+                expires_at=expires_at,
+                requested_ip=ip,
+            )
+
+        return constant_message, raw_token
+
+    @staticmethod
+    def reset_password(db: Session, raw_token: str, new_password: str) -> str:
+        """
+        Completes password reset [PDF 8, 9].
+        - Verifies single-use 256-bit token.
+        - Hashes new password with Argon2id.
+        - Marks token as used.
+        - Revokes ALL active refresh tokens for the user.
+        """
+        token_hash = hash_token(raw_token)
+        token_row = AuthRepository.get_password_reset_token(db, token_hash)
+
+        if not token_row or token_row.used_at is not None:
+            raise UnauthorizedError("Password reset link is invalid or has already been used.")
+
+        now = datetime.now(timezone.utc)
+        expires_at = token_row.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if expires_at < now:
+            raise UnauthorizedError("Password reset link has expired. Please request a new one.")
+
+        user = AuthRepository.get_by_id(db, token_row.user_id)
+        if not user or not user.is_active:
+            raise UnauthorizedError("Account not found or inactive.")
+
+        # Update password with Argon2id and reset failed attempts
+        new_hash = hash_password(new_password)
+        AuthRepository.update_password(db, user, new_hash)
+
+        # Mark token as used
+        AuthRepository.mark_password_reset_token_used(db, token_row)
+
+        # Revoke all active refresh tokens for the user [PDF 9]
+        AuthRepository.revoke_all_user_refresh_tokens(db, user.id)
+
+        return "Password has been successfully reset. Please log in with your new password."
