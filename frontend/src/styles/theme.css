@@ -538,6 +538,7 @@ textarea {
 .form-select:focus,
 .form-textarea:focus {
   border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(33, 33, 33, 0.07);
 }
 
 .form-input-error {
@@ -714,6 +715,143 @@ textarea {
   background-color: var(--color-canvas);
   color: var(--color-ink);
   border: 1px solid var(--color-hairline);
+  box-shadow: 0 1px 2px rgba(33, 33, 33, 0.04);
+}
+
+.sidebar-user-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--color-hairline);
+  background-color: var(--color-canvas-sand);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.avatar-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--rounded-pill);
+  background-color: var(--color-ink-soft);
+  color: var(--color-canvas);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* --- Segmented Filter Pill Strip --- */
+.segmented-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--rounded-lg);
+  background-color: var(--color-canvas-sand-deep);
+  border: 1px solid var(--color-hairline);
+  flex-wrap: wrap;
+}
+
+.segmented-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--rounded-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-ink-mute);
+  font-size: var(--text-caption-size);
+  line-height: 18px;
+  cursor: pointer;
+  transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+  white-space: nowrap;
+}
+
+.segmented-tab:hover {
+  color: var(--color-ink);
+}
+
+.segmented-tab-active {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border-color: var(--color-hairline);
+  box-shadow: 0 1px 2px rgba(33, 33, 33, 0.05);
+}
+
+.segmented-tab-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--rounded-pill);
+  background-color: var(--color-canvas-sand);
+  color: var(--color-ink-secondary);
+}
+
+.segmented-tab-active .segmented-tab-badge {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* --- Command Palette (Ctrl+K) & Topbar Search --- */
+.cmdk-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 6px 10px 6px 12px;
+  min-width: 240px;
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--rounded-lg);
+  color: var(--color-ink-mute-2);
+  font-size: var(--text-caption-size);
+  cursor: pointer;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.cmdk-trigger:hover {
+  border-color: var(--color-ink-mute);
+  color: var(--color-ink);
+}
+
+.kbd-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 16px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background-color: var(--color-canvas-sand);
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-ink-mute);
+}
+
+.cmdk-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--rounded-md);
+  border: none;
+  background: transparent;
+  color: var(--color-ink);
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--text-body-sm-size);
+}
+
+.cmdk-item:hover,
+.cmdk-item-active {
+  background-color: var(--color-canvas-sand);
+}
+
+.meta-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .app-main {
@@ -1171,6 +1309,9 @@ textarea {
   .mosaic-grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .meta-grid-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 991px) {
@@ -1249,6 +1390,12 @@ textarea {
   .mosaic-grid-4,
   .mosaic-grid-3 {
     grid-template-columns: 1fr;
+  }
+  .meta-grid-6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cmdk-trigger {
+    min-width: auto;
   }
   .diff-grid {
     grid-template-columns: 1fr;

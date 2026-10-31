@@ -442,6 +442,48 @@ export const LifecycleStepper: React.FC<LifecycleStepperProps> = ({
   );
 };
 
+/* --- Segmented Pill Filter Tabs --- */
+export interface SegmentedTabItem {
+  value: string;
+  label: string;
+  count?: number;
+}
+
+interface SegmentedTabsProps {
+  items: SegmentedTabItem[];
+  value: string;
+  onChange: (nextValue: string) => void;
+  ariaLabel?: string;
+}
+
+export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
+  items,
+  value,
+  onChange,
+  ariaLabel = 'View filter tabs',
+}) => (
+  <div className="segmented-tabs" role="tablist" aria-label={ariaLabel}>
+    {items.map((item) => {
+      const active = item.value === value;
+      return (
+        <button
+          key={item.value || '__all__'}
+          type="button"
+          role="tab"
+          aria-selected={active}
+          className={`segmented-tab ${active ? 'segmented-tab-active' : ''}`.trim()}
+          onClick={() => onChange(item.value)}
+        >
+          <span>{item.label}</span>
+          {item.count !== undefined ? (
+            <span className="segmented-tab-badge">{item.count}</span>
+          ) : null}
+        </button>
+      );
+    })}
+  </div>
+);
+
 /* --- Live Password Strength Checklist (SPEC.md §8, §12.4) --- */
 export const PasswordChecklist: React.FC<{ password: string }> = ({ password }) => {
   const rules = evaluatePasswordStrength(password);

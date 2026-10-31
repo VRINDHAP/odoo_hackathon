@@ -15,9 +15,11 @@ import {
   LogOut,
   Menu,
   Percent,
+  Plus,
   Receipt,
   RefreshCw,
   Repeat,
+  Search,
   Settings,
   Shield,
   Users,
@@ -28,6 +30,7 @@ import { apiRequest, getApiDataSourceMode } from '../api/client';
 import { emitManualRefresh, getLastSyncTimestamp } from '../api/realtimeBus';
 import { StatusChip } from '../components/chips/StatusChip';
 import { Button } from '../components/forms/Primitives';
+import { CommandPalette } from '../components/navigation/CommandPalette';
 import { useAuth } from '../hooks/useAuth';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import type { NotificationItem } from '../types/domain';
@@ -84,6 +87,8 @@ export const WorkspaceLayout: React.FC = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [lastSyncTime, setLastSyncTime] = useState<string>(() => getLastSyncTimestamp());
 
@@ -102,6 +107,18 @@ export const WorkspaceLayout: React.FC = () => {
   }, [loadNotifications]);
 
   useRealtimeSync(loadNotifications, { pollIntervalMs: 30000 });
+
+  // Global Ctrl+K / Cmd+K Quick-Jump Shortcut
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const breadcrumbs = useMemo(() => {
     const path = location.pathname;
@@ -146,6 +163,11 @@ export const WorkspaceLayout: React.FC = () => {
     return parsed.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   }, [lastSyncTime]);
 
+  const userInitials = useMemo(() => {
+    const base = user?.name || user?.email || 'BL';
+    return base.slice(0, 2).toUpperCase();
+  }, [user]);
+
   const renderSection = (title: string, items: NavItem[]) => {
     const visible = items.filter((item) => !item.adminOnly || isAdmin);
     if (visible.length === 0) return null;
@@ -185,12 +207,12 @@ export const WorkspaceLayout: React.FC = () => {
 
       <aside className={`app-sidebar ${sidebarOpen ? 'app-sidebar-open' : ''}`.trim()}>
         <div className="app-sidebar-brand">
-          <div className="brand-mark">
+          <Link to="/dashboard" className="brand-mark" onClick={() => setSidebarOpen(false)}>
             <span className="brand-bolt">
               <Zap size={14} />
             </span>
             <span>Brightloop</span>
-          </div>
+          </Link>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <StatusChip status={user?.role ?? 'staff'} showDot={false} />
             <button
@@ -205,12 +227,44 @@ export const WorkspaceLayout: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 1, paddingBottom: 20 }}>
+        <div style={{ flex: 1, paddingBottom: 16, overflowY: 'auto' }}>
           {renderSection('Overview', OVERVIEW_NAV)}
           {renderSection('Sales & Subscriptions', SALES_NAV)}
           {renderSection('Catalog & Pricing', CATALOG_NAV)}
           {renderSection('Billing & Ledger', BILLING_NAV)}
           {isAdmin ? renderSection('Administration', ADMIN_NAV) : null}
+        </div>
+
+        <div className="sidebar-user-footer">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+            <span className="avatar-circle">{userInitials}</span>
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'var(--color-ink)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user?.email}
+              </div>
+              <div className="type-caption" style={{ fontSize: 11, textTransform: 'capitalize' }}>
+                {user?.role} workspace
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => void handleSignOut()}
+            title="Sign out"
+            aria-label="Sign out from sidebar"
+            style={{ padding: 6 }}
+          >
+            <LogOut size={14} />
+          </button>
         </div>
       </aside>
 
@@ -239,8 +293,84 @@ export const WorkspaceLayout: React.FC = () => {
               ) : null}
               <span className="breadcrumb-current">{breadcrumbs.current}</span>
             </nav>
+          </div>
 
-            <span className="desktop-only" style={{ marginLeft: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+            {/* Quick-Jump Search Bar (Ctrl+K) */}
+            <button
+              type="button"
+              className="cmdk-trigger"
+              onClick={() => setPaletteOpen(true)}
+              aria-label="Open quick navigation search"
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <Search size={14} />
+                <span className="desktop-only">Search or jump to…</span>
+              </span>
+              <span className="kbd-chip desktop-only">Ctrl K</span>
+            </button>
+
+            {/* Quick Action Menu */}
+            <div style={{ position: 'relative' }}>
+              <Button
+                variant="primary"
+                onClick={() => setQuickCreateOpen((o) => !o)}
+                aria-label="Quick actions"
+              >
+                <Plus size={14} />
+                <span className="desktop-only">Quick Action</span>
+              </Button>
+
+              {quickCreateOpen ? (
+                <div
+                  className="product-tile-compact"
+                  style={{
+                    position: 'absolute',
+                    top: 44,
+                    right: 0,
+                    width: 245,
+                    boxShadow: 'var(--shadow-modal)',
+                    zIndex: 48,
+                    padding: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  <span className="eyebrow-cap" style={{ padding: '4px 10px' }}>
+                    Workflows
+                  </span>
+                  {[
+                    { label: 'Subscriptions & Quotes', to: '/subscriptions' },
+                    { label: 'Start from Template', to: '/quotation-templates' },
+                    { label: 'Customer Directory', to: '/customers' },
+                    { label: 'Record Payment', to: '/payments' },
+                    { label: 'Chase Overdue Invoices', to: '/overdue' },
+                    ...(isAdmin
+                      ? [
+                          { label: 'Products & Variants', to: '/products' },
+                          { label: 'Plans & Discounts', to: '/plans' },
+                        ]
+                      : []),
+                  ].map((act) => (
+                    <button
+                      key={act.to}
+                      type="button"
+                      className="cmdk-item"
+                      onClick={() => {
+                        setQuickCreateOpen(false);
+                        navigate(act.to);
+                      }}
+                    >
+                      <span>{act.label}</span>
+                      <ChevronRight size={13} style={{ color: 'var(--color-ink-mute-2)' }} />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <span className="desktop-only">
               <StatusChip
                 status={
                   getApiDataSourceMode() === 'live'
@@ -250,9 +380,7 @@ export const WorkspaceLayout: React.FC = () => {
                 variant={getApiDataSourceMode() === 'live' ? 'active' : 'neutral'}
               />
             </span>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
             <button
               type="button"
               className="btn btn-outline"
@@ -328,10 +456,6 @@ export const WorkspaceLayout: React.FC = () => {
               </div>
             ) : null}
 
-            <span className="type-caption desktop-only" style={{ color: 'var(--color-ink)' }}>
-              {user?.email}
-            </span>
-
             <Button variant="outline" onClick={() => void handleSignOut()}>
               <LogOut size={14} />
               <span className="desktop-only">Sign out</span>
@@ -343,6 +467,12 @@ export const WorkspaceLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      <CommandPalette
+        isOpen={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 };

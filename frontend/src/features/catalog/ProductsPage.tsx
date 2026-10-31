@@ -9,6 +9,7 @@ import {
   FormSelect,
   FormTextarea,
   Modal,
+  SegmentedTabs,
   SlideOverDrawer,
 } from '../../components/forms/Primitives';
 import { DataTable, type DataColumn } from '../../components/tables/DataTable';
@@ -383,6 +384,39 @@ export const ProductsPage: React.FC = () => {
           <StatusChip status="Read-Only Access" variant="neutral" />
         )}
       </header>
+
+      {/* Quick Product Type Segmented Tabs */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <SegmentedTabs
+          ariaLabel="Product category quick filter"
+          value={typeFilter}
+          onChange={setTypeFilter}
+          items={[
+            { value: '', label: 'All Products', count: products.length },
+            {
+              value: 'software',
+              label: 'Software',
+              count: products.filter((p) => p.type === 'software').length,
+            },
+            {
+              value: 'addon',
+              label: 'Add-ons',
+              count: products.filter((p) => p.type === 'addon').length,
+            },
+            {
+              value: 'service',
+              label: 'Services',
+              count: products.filter((p) => p.type === 'service').length,
+            },
+            {
+              value: 'physical',
+              label: 'Physical',
+              count: products.filter((p) => p.type === 'physical').length,
+            },
+          ]}
+        />
+        <span className="type-caption">{filteredProducts.length} catalog SKUs</span>
+      </div>
 
       <DataTable
         columns={columns}

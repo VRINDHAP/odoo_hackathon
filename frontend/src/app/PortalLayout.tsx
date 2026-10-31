@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, RefreshCw, X, Zap } from 'lucide-react';
+import {
+  CreditCard,
+  FileText,
+  Layers,
+  LogOut,
+  Menu,
+  RefreshCw,
+  UserCircle2,
+  X,
+  Zap,
+} from 'lucide-react';
 import { getApiDataSourceMode } from '../api/client';
 import { emitManualRefresh } from '../api/realtimeBus';
 import { StatusChip } from '../components/chips/StatusChip';
@@ -17,11 +27,18 @@ export const PortalLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const links = [
-    { to: '/portal/subscriptions', label: 'My Subscriptions' },
-    { to: '/portal/invoices', label: 'My Invoices' },
-    { to: '/portal/payments', label: 'Payment History' },
-    { to: '/portal/profile', label: 'Profile & Password' },
+    { to: '/portal/subscriptions', label: 'My Subscriptions', icon: Layers },
+    { to: '/portal/invoices', label: 'My Invoices', icon: FileText },
+    { to: '/portal/payments', label: 'Payment History', icon: CreditCard },
+    { to: '/portal/profile', label: 'Profile & Password', icon: UserCircle2 },
   ];
+
+  const userInitials = (user?.name ?? user?.email ?? 'CU')
+    .split(/[\s@._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
 
   const handleLogout = async () => {
     await logout();
@@ -54,17 +71,21 @@ export const PortalLayout: React.FC = () => {
             className="portal-nav-links desktop-only"
             aria-label="Customer Portal Navigation"
           >
-            {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`.trim()
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
+            {links.map((link) => {
+              const Icon = link.icon;
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`.trim()
+                  }
+                >
+                  <Icon size={15} />
+                  <span>{link.label}</span>
+                </NavLink>
+              );
+            })}
           </nav>
         </div>
 
@@ -85,9 +106,17 @@ export const PortalLayout: React.FC = () => {
               variant={getApiDataSourceMode() === 'live' ? 'active' : 'neutral'}
             />
           </span>
-          <span className="type-caption desktop-only" style={{ color: 'var(--color-ink)' }}>
-            {user?.email}
-          </span>
+          <div
+            className="desktop-only"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 4px' }}
+          >
+            <span className="avatar-circle" style={{ width: 26, height: 26, fontSize: 11 }}>
+              {userInitials || 'CU'}
+            </span>
+            <span className="type-caption" style={{ color: 'var(--color-ink)' }}>
+              {user?.email}
+            </span>
+          </div>
           <Button variant="outline" onClick={() => void handleLogout()}>
             <LogOut size={14} />
             <span className="desktop-only">Sign out</span>

@@ -7,6 +7,7 @@ import {
   FormInput,
   FormSelect,
   Modal,
+  SegmentedTabs,
   ToggleSwitch,
 } from '../../components/forms/Primitives';
 import { useAuth } from '../../hooks/useAuth';
@@ -222,6 +223,39 @@ export const PlansPage: React.FC = () => {
           )}
         </div>
       </header>
+
+      {/* Quick Billing Cadence Segmented Tabs */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <SegmentedTabs
+          ariaLabel="Billing interval quick filter"
+          value={periodFilter}
+          onChange={setPeriodFilter}
+          items={[
+            { value: '', label: 'All Plans', count: plans.length },
+            {
+              value: 'monthly',
+              label: 'Monthly',
+              count: plans.filter((p) => p.billing_period === 'monthly').length,
+            },
+            {
+              value: 'yearly',
+              label: 'Yearly',
+              count: plans.filter((p) => p.billing_period === 'yearly').length,
+            },
+            {
+              value: 'weekly',
+              label: 'Weekly',
+              count: plans.filter((p) => p.billing_period === 'weekly').length,
+            },
+            {
+              value: 'daily',
+              label: 'Daily',
+              count: plans.filter((p) => p.billing_period === 'daily').length,
+            },
+          ]}
+        />
+        <span className="type-caption">{visiblePlans.length} active or draft plans</span>
+      </div>
 
       {isLoading ? (
         <div className="tile-mosaic-2x2">
