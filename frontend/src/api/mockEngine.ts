@@ -2532,6 +2532,38 @@ export async function handleMockRequest(
       }
     }
 
+    const portalConfirmMatch = path.match(/^\/me\/subscriptions\/([^/]+)\/confirm$/);
+    if (portalConfirmMatch && upperMethod === 'POST') {
+      const sub = mockDb.subscriptions.find(
+        (s) => s.id === portalConfirmMatch[1] && s.customer_id === custId
+      );
+      if (!sub) return err(404, 'NOT_FOUND', 'Subscription not found.');
+      if (sub.status !== 'quotation') {
+        return err(409, 'CONFLICT', 'Only Quotation subscriptions can be confirmed.');
+      }
+      if (sub.quote_valid_until && todayIsoDate() > sub.quote_valid_until) {
+        return err(409, 'CONFLICT', `Quotation expired on ${sub.quote_valid_until}.`);
+      }
+      sub.status = 'confirmed';
+      sub.activities.unshift({
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        actor_email: actor.email,
+        action: 'Customer Confirmed Order',
+        note: 'Quotation accepted via Customer Self-Service Portal.',
+      });
+      return { status: 200, data: sub };
+    }
+
+    const portalInvPdfMatch = path.match(/^\/me\/invoices\/([^/]+)\/pdf$/);
+    if (portalInvPdfMatch && upperMethod === 'GET') {
+      const inv = mockDb.invoices.find(
+        (i) => i.id === portalInvPdfMatch[1] && i.customer_id === custId
+      );
+      if (!inv) return err(404, 'NOT_FOUND', 'Invoice not found.');
+      return { status: 200, blob: generateInvoicePdfBlob(inv) };
+    }
+
     const portalReqMatch = path.match(/^\/me\/subscriptions\/([^/]+)\/request$/);
     if (portalReqMatch && upperMethod === 'POST') {
       const sub = mockDb.subscriptions.find((s) => s.id === portalReqMatch[1] && s.customer_id === custId);
