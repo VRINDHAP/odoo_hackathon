@@ -58,7 +58,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: Effective price calculates `sales_price + extra_price`; cost margin exposed strictly to Admin.
   - **Dependencies**: BE-1.3, BE-1.7.
 
-- [ ] **BE-2.2 [Nandana]**: Implement Plans model and endpoints with plan behavior flags [PDF 5.4, 8].
+- [x] **BE-2.2 [Nandana]**: Implement Plans model and endpoints with plan behavior flags [PDF 5.4, 8].
   - **Input**: `GET/POST /plans`, `PATCH /plans/{id}`.
   - **Expected Output**: Plans module supporting intervals (`daily`, `weekly`, `monthly`, `yearly`) and flags (`auto_close`, `closable`, `pausable`, `renewable`, `is_active`).
   - **Acceptance Test**: Admin can create and update plan flags; non-admin cannot mutate plans.
