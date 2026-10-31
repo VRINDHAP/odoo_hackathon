@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import require_admin, require_staff_or_admin
+from app.core.deps import get_current_user, require_admin, require_staff_or_admin
 from app.modules.auth.models import User
-from app.modules.customers.models import CustomerStatus
+from app.modules.customers.models import Customer, CustomerStatus
 from app.modules.customers.schemas import (
     CustomerCreateRequest,
     CustomerDetailResponse,
@@ -111,3 +111,72 @@ def delete_customer(
         current_user=current_user,
         ip=client_ip,
     )
+
+
+# ============================================================================
+# CUSTOMER PORTAL PROFILE (BE-7.2) [PDF 2, 8]
+# ============================================================================
+portal_router = APIRouter(tags=["Customer Portal"])
+
+
+def _resolve_portal_customer(db: Session, current_user: User) -> Customer:
+    """Finds or initializes the Customer entity for the authenticated portal user."""
+    cust = None
+    if getattr(current_user, "customer_id", None):
+        cust = db.query(Customer).filter(Customer.id == current_user.customer_id, Customer.deleted_at.is_(None)).first()
+    if not cust:
+        cust = db.query(Customer).filter(Customer.portal_user_id == current_user.id, Customer.deleted_at.is_(None)).first()
+    if not cust:
+        cust = db.query(Customer).filter(Customer.email == current_user.email, Customer.deleted_at.is_(None)).first()
+    if not cust:
+        cust = Customer(
+            name=current_user.email.split("@")[0].capitalize(),
+            email=current_user.email,
+            portal_user_id=current_user.id,
+            billing_address={"line1": "Default Address", "city": "Bengaluru", "state": "Karnataka", "postal_code": "560001", "country": "India"},
+        )
+        db.add(cust)
+        db.commit()
+        db.refresh(cust)
+    return cust
+
+
+@portal_router.get(
+    "/me/profile",
+    response_model=CustomerResponse,
+    summary="Get authenticated customer's own profile [PDF 2, 8]",
+)
+def get_my_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns the authenticated customer's contact and billing profile."""
+    cust = _resolve_portal_customer(db, current_user)
+    return CustomerResponse.model_validate(cust)
+
+
+@portal_router.patch(
+    "/me/profile",
+    response_model=CustomerResponse,
+    summary="Customer self-service profile update [PDF 2, 8]",
+)
+def update_my_profile(
+    payload: CustomerUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Self-service endpoint: Customer updates their own billing address and contact details [PDF 2, 8].
+    Restricted strictly to the authenticated user's own linked customer entity.
+    """
+    cust = _resolve_portal_customer(db, current_user)
+    client_ip = request.client.host if request.client else None
+    return CustomerService.update_customer(
+        db=db,
+        customer_id=cust.id,
+        data=payload,
+        current_user=current_user,
+        ip=client_ip,
+    )
+

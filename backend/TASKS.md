@@ -108,13 +108,13 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
 
 ## Phase 4: Billing (Invoices, Discounts, Billing Job Engine, PDFs) [PDF 17]
 
-- [ ] **BE-4.1 [Nandana]**: Implement Discounts model and dynamic eligibility evaluation engine [PDF 5.8, 7.3, 8].
+- [x] **BE-4.1 [Nandana]**: Implement Discounts model and dynamic eligibility evaluation engine [PDF 5.8, 7.3, 8].
   - **Input**: `GET/POST/PATCH /discounts`, `GET /discounts/{id}/usage`.
   - **Expected Output**: Service evaluating discount eligibility at invoice build time; applies best single eligible discount.
   - **Acceptance Test**: Expired discount is rejected; among 2 eligible discounts, largest monetary deduction is applied.
   - **Dependencies**: BE-1.3, BE-2.1.
 
-- [ ] **BE-4.2 [Nandana]**: Implement concurrency-safe Discount Usage counter and release on cancellation [PDF 5.8, 7.3].
+- [x] **BE-4.2 [Nandana]**: Implement concurrency-safe Discount Usage counter and release on cancellation [PDF 5.8, 7.3].
   - **Input**: Atomic SQL update: `UPDATE discount_rules SET usage_count = usage_count + 1 WHERE usage_count < usage_limit`.
   - **Expected Output**: Thread-safe usage increment; redemption row recorded; release logic upon invoice cancellation.
   - **Acceptance Test**: Concurrent calls cannot increment `usage_count` beyond `usage_limit`; cancelling invoice decrements counter.
@@ -182,19 +182,19 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
 
 ## Phase 6: Reports & Finance Calculations [PDF 17]
 
-- [ ] **BE-6.1 [Nandana]**: Implement MRR and ARR Normalization calculation service [PDF 10].
+- [x] **BE-6.1 [Nandana]**: Implement MRR and ARR Normalization calculation service [PDF 10].
   - **Input**: Query over all subscriptions where `status == 'Active'`.
   - **Expected Output**: MRR calculated as `monthly*1 + yearly/12 + weekly*52/12 + daily*365/12` (excluding paused); ARR = MRR * 12.
   - **Acceptance Test**: Unit test verifies exact MRR value across a mixed portfolio of daily, weekly, monthly, and yearly active plans.
   - **Dependencies**: BE-3.3.
 
-- [ ] **BE-6.2 [Nandana]**: Build Executive Summary KPI endpoint with Redis caching [PDF 10, 11].
+- [x] **BE-6.2 [Nandana]**: Build Executive Summary KPI endpoint with Redis caching [PDF 10, 11].
   - **Input**: `GET /reports/summary`.
   - **Expected Output**: Aggregated metrics: Active Subscriptions, MRR, ARR, Invoiced, Collected, Outstanding, Overdue, New vs Closed.
   - **Acceptance Test**: First call computes and caches in Redis (TTL 3 min); subsequent call returns cached payload in < 20 ms.
   - **Dependencies**: BE-6.1, BE-5.1.
 
-- [ ] **BE-6.3 [Nandana]**: Build Filterable Reports Endpoints with CSV streaming export [PDF 8, 10].
+- [x] **BE-6.3 [Nandana]**: Build Filterable Reports Endpoints with CSV streaming export [PDF 8, 10].
   - **Input**: `GET /reports/active-subscriptions`, `/revenue`, `/outstanding`, `/overdue`, `/payments` with `?format=csv`.
   - **Expected Output**: JSON or streaming CSV file output based on format query param.
   - **Acceptance Test**: Calling endpoint with `?format=csv` returns `text/csv` header and well-formatted CSV lines.
@@ -216,7 +216,7 @@ Tasks are ordered strictly according to the 7-Phase Delivery Plan [PDF 17]. Ever
   - **Acceptance Test**: Customer A calling `/me/subscriptions` receives only their own records; never sees Customer B data.
   - **Dependencies**: BE-1.3, BE-4.3, BE-5.1.
 
-- [ ] **BE-7.2 [Nandana]**: Build Customer Profile update endpoint [PDF 2, 8].
+- [x] **BE-7.2 [Nandana]**: Build Customer Profile update endpoint [PDF 2, 8].
   - **Input**: `PATCH /me/profile` (billing address, phone, contact details).
   - **Expected Output**: Self-service profile update updating customer record associated with authenticated user.
   - **Acceptance Test**: Customer can update their billing address; cannot modify their role or other tenant accounts.
