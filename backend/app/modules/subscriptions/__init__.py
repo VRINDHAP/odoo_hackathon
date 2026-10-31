@@ -1,12 +1,18 @@
 """
 Subscriptions Module [Vrindha].
-Provides domain models, schemas, and date utility functions for recurring subscriptions.
+Provides domain models, schemas, state machine service, and API routers.
 """
+from app.modules.subscriptions.exceptions import (
+    InvalidStateTransitionException,
+    PlanPolicyViolationException,
+    QuotationExpiredException,
+)
 from app.modules.subscriptions.models import (
     Subscription,
     SubscriptionLine,
     SubscriptionStatus,
 )
+from app.modules.subscriptions.router import router as subscriptions_router
 from app.modules.subscriptions.schemas import (
     SubscriptionBase,
     SubscriptionCloseRequest,
@@ -23,6 +29,12 @@ from app.modules.subscriptions.schemas import (
     SubscriptionTransitionRequest,
     SubscriptionUpdate,
 )
+from app.modules.subscriptions.service import (
+    PlanPolicy,
+    SubscriptionService,
+    get_plan_policy,
+    register_plan_policy,
+)
 from app.modules.subscriptions.utils import (
     calculate_billing_period_range,
     calculate_line_amounts,
@@ -36,6 +48,10 @@ __all__ = [
     "Subscription",
     "SubscriptionLine",
     "SubscriptionStatus",
+    # Exceptions
+    "InvalidStateTransitionException",
+    "QuotationExpiredException",
+    "PlanPolicyViolationException",
     # Schemas
     "SubscriptionBase",
     "SubscriptionCreate",
@@ -51,6 +67,13 @@ __all__ = [
     "SubscriptionResumeRequest",
     "SubscriptionCloseRequest",
     "SubscriptionRenewRequest",
+    # Service
+    "SubscriptionService",
+    "PlanPolicy",
+    "get_plan_policy",
+    "register_plan_policy",
+    # Router
+    "subscriptions_router",
     # Utils
     "calculate_next_billing_date",
     "calculate_billing_period_range",
@@ -58,4 +81,3 @@ __all__ = [
     "calculate_line_amounts",
     "calculate_subscription_totals",
 ]
-

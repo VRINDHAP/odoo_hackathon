@@ -32,7 +32,10 @@ setup_exception_handlers(app)
 
 # Register Module Routers
 from app.modules.auth.router import router as auth_router
+from app.modules.subscriptions.router import router as subscriptions_router
+
 app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(subscriptions_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/", tags=["Root"])
